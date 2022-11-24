@@ -6,10 +6,12 @@ on:
       - '**/*.rs'
 
 jobs:
-  deploy:
+  cbuild:
     runs-on: ubuntu-latest
+    container:
+      image: docker://rust:1.65
     steps:
-      - uses: Syndelis/cbindgen-action@VERSION
+      - uses: Syndelis/cbindgen-action@v1.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           output: include/odeir.h

@@ -4,14 +4,13 @@ on:
   push:
     paths:
       - '**/*.rs'
+      - '.github/workflows/cbindgen.yml'
 
 jobs:
   cbuild:
     runs-on: ubuntu-latest
-    container:
-      image: docker://rust:1.65
     steps:
-      - uses: Syndelis/cbindgen-action@v1.0.0
+      - uses: Syndelis/cbindgen-action@v1.1.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           output: include/odeir.h
+          github_token: ${{ secrets.GITHUB_TOKEN }}

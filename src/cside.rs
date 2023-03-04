@@ -36,6 +36,13 @@ pub struct CConstant {
     pub value: f64,
 }
 
+#[repr(C)]
+#[derive(Debug)]
+pub struct GitHubActionTriggerTest {
+    pub a: i32,
+    pub b: i32,
+}
+
 impl From<Model> for CModel {
     fn from(value: Model) -> Self {
         let (nodes_ptr, nodes_len, _nodes_cap) = vec_to_ptr(value.nodes);

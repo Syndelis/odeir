@@ -3,7 +3,8 @@ name: Cbindgen Action
 on:
   push:
     paths:
-      - '**/*.rs'
+      - '**.rs'
+      - '**.toml'
       - '.github/workflows/cbindgen.yml'
 
 jobs:

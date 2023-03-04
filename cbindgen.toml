@@ -70,7 +70,13 @@ renaming_overrides_prefixing = false
 
 
 [export.body]
-
+"RawVec" = """
+    ~RawVec<T>() {
+        if(!destructor(*this)) {
+            std::printf("Failed to free RawVec %p\\n", this);
+        }
+    }
+"""
 
 [export.mangle]
 

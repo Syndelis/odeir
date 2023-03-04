@@ -1,15 +1,48 @@
-use crate::rustside::{MetaData, NodeId, Node, Constant, Model};
+use crate::rustside::{Constant, MetaData, Model, Node, NodeId};
 
-use std::ffi::{CString, CStr, c_char};
+use std::{ffi::{c_char, c_int, CStr, CString}, panic::RefUnwindSafe};
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct RawVec<T> {
+    pub ptr: *const T,
+    pub len: usize,
+    pub destructor: extern "C" fn(Self) -> c_int,
+}
+
+impl<T> RawVec<T> where T: RefUnwindSafe {
+    pub extern "C" fn destructor(self) -> c_int {
+        let result = std::panic::catch_unwind(move || {
+            unsafe {
+                let slice = std::ptr::slice_from_raw_parts_mut(self.ptr as *mut T, self.len);
+                std::mem::drop(Box::from_raw(slice));
+            }
+        });
+        result_to_int(result)
+    }
+}
+
+impl<T, U> From<Vec<T>> for RawVec<U>
+where
+    T: Into<U>,
+    U: RefUnwindSafe
+{
+    fn from(value: Vec<T>) -> Self {
+        let (ptr, len) = vec_to_ptr(value);
+        Self {
+            len,
+            ptr,
+            destructor: Self::destructor,
+        }
+    }
+}
 
 #[repr(C)]
 #[derive(Debug)]
 pub struct CModel {
     pub meta_data: MetaData,
-    pub nodes: *const CNode,
-    pub constants: *const CConstant,
-    pub node_count: usize,
-    pub constant_count: usize,
+    pub nodes: RawVec<CNode>,
+    pub constants: RawVec<CConstant>,
 }
 
 #[repr(C)]
@@ -24,8 +57,7 @@ pub enum CNode {
         id: NodeId,
         name: *const c_char,
         operation: char,
-        inputs: *const NodeId,
-        input_count: usize,
+        inputs: RawVec<NodeId>,
     },
 }
 
@@ -38,15 +70,10 @@ pub struct CConstant {
 
 impl From<Model> for CModel {
     fn from(value: Model) -> Self {
-        let (nodes_ptr, nodes_len, _nodes_cap) = vec_to_ptr(value.nodes);
-        let (constants_ptr, constants_len, _constants_cap) = vec_to_ptr(value.constants);
-
         CModel {
             meta_data: value.meta_data,
-            node_count: nodes_len,
-            constant_count: constants_len,
-            nodes: nodes_ptr,
-            constants: constants_ptr,
+            nodes: value.nodes.into(),
+            constants: value.constants.into(),
         }
     }
 }
@@ -54,23 +81,27 @@ impl From<Model> for CModel {
 impl From<Node> for CNode {
     fn from(value: Node) -> Self {
         match value {
-            Node::Population { id, name, related_constant_name } => CNode::Population {
+            Node::Population {
+                id,
+                name,
+                related_constant_name,
+            } => CNode::Population {
                 id,
                 name: string_to_cstring(name),
                 related_constant_name: string_to_cstring(related_constant_name),
             },
-            Node::Combinator { id, name, operation, inputs } => {
-                let (inputs_ptr, inputs_len, _cap) = inputs.into_raw_parts();
-
-                CNode::Combinator {
-                    id,
-                    name: string_to_cstring(name),
-                    operation,
-                    input_count: inputs_len,
-                    inputs: inputs_ptr,
-                }
+            Node::Combinator {
+                id,
+                name,
+                operation,
+                inputs,
+            } => CNode::Combinator {
+                id,
+                name: string_to_cstring(name),
+                operation,
+                inputs: inputs.into(),
             },
-        } 
+        }
     }
 }
 
@@ -87,20 +118,32 @@ fn string_to_cstring(str: String) -> *const c_char {
     CString::new(str).unwrap().into_raw()
 }
 
-fn vec_to_ptr<T, U>(vec: Vec<T>) -> (*mut U, usize, usize)
+fn vec_to_ptr<T, U>(vec: Vec<T>) -> (*mut U, usize)
 where
-    T: Into<U>
+    T: Into<U>,
 {
-    vec
+    let data = vec
         .into_iter()
         .map(|el: T| el.into())
         .collect::<Vec<U>>()
-        .into_raw_parts()
+        .into_boxed_slice();
+    let data = Box::leak(data);
+    (data.as_ptr() as *mut _, data.len())
+}
+
+fn result_to_int<T, E>(result: Result<T, E>) -> c_int {
+    match result {
+        Ok(_) => 1,
+        Err(_) => 0,
+    }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn model_from_cstring(json_str: *const c_char) -> CModel {
-    let json_str = unsafe { CStr::from_ptr(json_str) };
-    let model: Model = serde_json::from_str(json_str.to_str().unwrap()).unwrap();
-    model.into()
+pub unsafe extern "C" fn model_from_cstring(json_str: *const c_char, cmodel: *mut CModel) -> c_int {
+    let result = std::panic::catch_unwind(|| {
+        let json_str = unsafe { CStr::from_ptr(json_str) };
+        let model: Model = serde_json::from_str(json_str.to_str().unwrap()).unwrap();
+        *cmodel = model.into()
+    });
+    result_to_int(result)
 }

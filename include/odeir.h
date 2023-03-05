@@ -14,6 +14,18 @@ struct MetaData {
 
 using NodeId = uint32_t;
 
+template<typename T>
+struct RawVec {
+    const T *ptr;
+    size_t len;
+    int (*destructor)(RawVec);
+    ~RawVec<T>() {
+        if(!destructor(*this)) {
+            std::printf("Failed to free RawVec %p\n", this);
+        }
+    }
+};
+
 struct CNode {
     enum class Tag {
         Population,
@@ -30,8 +42,7 @@ struct CNode {
         NodeId id;
         const char *name;
         uint32_t operation;
-        const NodeId *inputs;
-        size_t input_count;
+        RawVec<NodeId> inputs;
     };
 
     Tag tag;
@@ -48,15 +59,13 @@ struct CConstant {
 
 struct CModel {
     MetaData meta_data;
-    const CNode *nodes;
-    const CConstant *constants;
-    size_t node_count;
-    size_t constant_count;
+    RawVec<CNode> nodes;
+    RawVec<CConstant> constants;
 };
 
 
 extern "C" {
 
-CModel model_from_cstring(const char *json_str);
+int model_from_cstring(const char *json_str, CModel *cmodel);
 
 } // extern "C"

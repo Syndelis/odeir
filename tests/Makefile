@@ -25,10 +25,10 @@ EXE=test
 
 VPATH=src $(wildcard src/*) $(CATCH2_EXTRAS_PATH)
 
-run: all
+run: build
 	./$(EXE)
 
-all: $(EXE)
+build: $(EXE)
 
 $(EXE): $(FIXTURES) $(ODEIR_LIB) $(OBJ_DIR) $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) $(ODEIR_LIB) -o $@ $(INCLUDE_DIRS) $(LINK_DIRS) $(LINKS) $(DEFINE)

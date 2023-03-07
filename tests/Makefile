@@ -37,7 +37,7 @@ $(FIXTURES): $(FIXTURES_DIR)/%.h : $(FIXTURES_DIR)/%.json
 	xxd -i $< > $@
 
 $(ODEIR_LIB):
-	cargo build
+	cargo +nightly build
 
 $(OBJ_DIR):
 	mkdir -p $@

@@ -18,9 +18,14 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
+          override: true
+
+      - name: Install meson
+        run: sudo apt install meson
 
       - name: Build Tests
-        run: make -C tests build
+        run: meson setup build tests
+      - run: ninja -C build
 
       - name: Run Tests
         run: make -C tests run

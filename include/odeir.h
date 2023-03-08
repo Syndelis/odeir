@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ostream>
 #include <new>
+#include <stdexcept>
 
 
 struct MetaData {
@@ -15,13 +16,23 @@ struct MetaData {
 using NodeId = uint32_t;
 
 template<typename T>
-struct RawVec {
+struct BoxedSlice {
     const T *ptr;
     size_t len;
-    int (*destructor)(RawVec);
-    ~RawVec<T>() {
-        if(!destructor(*this)) {
-            std::printf("Failed to free RawVec %p\n", this);
+    int (*destructor)(const BoxedSlice*);
+    ~BoxedSlice<T>() {
+        if(!destructor(this)) {
+            std::printf("Failed to free BoxedSlice %p\n", this);
+        }
+    }
+    size_t length() const {
+        return len;
+    }
+    const T& operator[](size_t idx) const {
+        if (idx < len) {
+            return ptr[idx];
+        } else {
+            throw std::out_of_range("Index out of bounds");
         }
     }
 };
@@ -42,7 +53,7 @@ struct CNode {
         NodeId id;
         const char *name;
         uint32_t operation;
-        RawVec<NodeId> inputs;
+        BoxedSlice<NodeId> inputs;
     };
 
     Tag tag;
@@ -59,8 +70,8 @@ struct CConstant {
 
 struct CModel {
     MetaData meta_data;
-    RawVec<CNode> nodes;
-    RawVec<CConstant> constants;
+    BoxedSlice<CNode> nodes;
+    BoxedSlice<CConstant> constants;
 };
 
 

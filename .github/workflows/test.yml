@@ -24,8 +24,11 @@ jobs:
         run: sudo apt install meson
 
       - name: Build Tests
-        run: meson setup build tests
-      - run: ninja -C build
+        run: |
+          cd tests
+          meson setup build
+          ninja -C build
 
       - name: Run Tests
-        run: make -C tests run
+        run:  |
+          tests/build/testcpp

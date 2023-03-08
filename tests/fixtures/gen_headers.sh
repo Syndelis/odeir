@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
-sources=$(ls *.json)
+cd ..
+sources=$(ls fixtures/*.json)
 for file in "$sources"; do
     stripped="$(basename $file .json)"
-    xxd -n "fixtures_$file" -i "$file" > "$stripped.h"
+    xxd -i "$file" > "fixtures/$stripped.h"
 done

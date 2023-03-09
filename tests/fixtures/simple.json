@@ -1,0 +1,46 @@
+{
+    "metaData": {
+        "startTime": 0,
+        "endTime": 10.50,
+        "deltaTime": 0.1
+    },
+    "nodes": [
+        {
+            "id": 1,
+            "name": "Population 1",
+            "related_constant_name": "Population 1_0"
+        },
+        {
+            "id": 2,
+            "name": "Population 2",
+            "related_constant_name": "Population 2_0"
+        },
+        {
+            "id": 30,
+            "name": "Pop1 + Pop2",
+            "operation": "+",
+            "inputs": [
+                1,
+                2
+            ]
+        }
+    ],
+    "constants": [
+        {
+            "name": "gravity",
+            "value": 9.81
+        },
+        {
+            "name": "Population 1_0",
+            "value": 100
+        },
+        {
+            "name": "Population 2_0",
+            "value": 200
+        },
+        {
+            "name": "a",
+            "value": 1.6
+        }
+    ]
+}

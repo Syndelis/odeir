@@ -20,7 +20,7 @@ struct BoxedSlice {
     const T *ptr;
     size_t len;
     int (*destructor)(const BoxedSlice*);
-    ~BoxedSlice<T>() {
+    ~BoxedSlice() {
         if(!destructor(this)) {
             std::printf("Failed to free BoxedSlice %p\n", this);
         }

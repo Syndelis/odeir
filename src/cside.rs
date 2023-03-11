@@ -1,6 +1,6 @@
 use crate::rustside::{Constant, MetaData, Model, Node, NodeId};
 
-use std::{ffi::{c_char, c_int, CStr, CString}, panic::{RefUnwindSafe, UnwindSafe}};
+use std::{ffi::{c_char, c_int, CStr, CString}, panic::{RefUnwindSafe, UnwindSafe}, fmt::Display};
 
 #[repr(C)]
 pub struct BoxedSlice<T> {
@@ -151,12 +151,23 @@ fn result_to_int<T, E>(result: Result<T, E>) -> c_int {
     }
 }
 
+fn print_unwrap<T, E: Display>(result: Result<T, E>) -> T {
+    match result {
+        Ok(v) => v, 
+        Err(e) => unsafe {
+            let err = e.to_string().replace("\0", "\\0");
+            let err = CString::new(err).unwrap();
+            libc::printf(b"Rust Error: %s\n\0".as_ptr() as *const c_char, err.as_ptr());
+            panic!("{}", e);
+        }
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn model_from_cstring(json_str: *const c_char, cmodel: *mut CModel) -> c_int {
     catch_panic(|| {
-        let json_str = unsafe { CStr::from_ptr(json_str) };
-        let model: Model = serde_json::from_str(json_str.to_str().unwrap()).unwrap();
+        let json_str = print_unwrap(unsafe { CStr::from_ptr(json_str) }.to_str());
+        let model: Model = print_unwrap(serde_json::from_str(json_str));
         cmodel.write(model.into())
     })
 }
-

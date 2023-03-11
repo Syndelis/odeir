@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ostream>
 #include <new>
+#include <stdexcept>
 
 
 struct MetaData {
@@ -13,6 +14,28 @@ struct MetaData {
 };
 
 using NodeId = uint32_t;
+
+template<typename T>
+struct BoxedSlice {
+    const T *ptr;
+    size_t len;
+    int (*destructor)(const BoxedSlice*);
+    ~BoxedSlice<T>() {
+        if(!destructor(this)) {
+            std::printf("Failed to free BoxedSlice %p\n", this);
+        }
+    }
+    size_t length() const {
+        return len;
+    }
+    const T& operator[](size_t idx) const {
+        if (idx < len) {
+            return ptr[idx];
+        } else {
+            throw std::out_of_range("Index out of bounds");
+        }
+    }
+};
 
 struct CNode {
     enum class Tag {
@@ -30,8 +53,7 @@ struct CNode {
         NodeId id;
         const char *name;
         uint32_t operation;
-        const NodeId *inputs;
-        size_t input_count;
+        BoxedSlice<NodeId> inputs;
     };
 
     Tag tag;
@@ -48,15 +70,13 @@ struct CConstant {
 
 struct CModel {
     MetaData meta_data;
-    const CNode *nodes;
-    const CConstant *constants;
-    size_t node_count;
-    size_t constant_count;
+    BoxedSlice<CNode> nodes;
+    BoxedSlice<CConstant> constants;
 };
 
 
 extern "C" {
 
-CModel model_from_cstring(const char *json_str);
+int model_from_cstring(const char *json_str, CModel *cmodel);
 
 } // extern "C"

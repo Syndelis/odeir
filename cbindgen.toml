@@ -71,7 +71,7 @@ renaming_overrides_prefixing = false
 
 [export.body]
 "BoxedSlice" = """
-    ~BoxedSlice<T>() {
+    ~BoxedSlice() {
         if(!destructor(this)) {
             std::printf("Failed to free BoxedSlice %p\\n", this);
         }

@@ -11,7 +11,9 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
 
     // When - the json is deserialized into a CModel
 
-    CModel model = model_from_cstring(fixtures_simple_json);
+    CModel model;
+
+    REQUIRE( model_from_cstring((const char *) fixtures_simple_json, &model) == 1 );
 
     // Then - the model should have the correct values
 
@@ -23,7 +25,7 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
 
     // Nodes -----------------------------------------------
     
-    REQUIRE( model.node_count == 3 );
+    REQUIRE( model.nodes.length() == 3 );
 
     // Node 0 ----------------------------------------------
 
@@ -46,13 +48,13 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
     REQUIRE_THAT( model.nodes[2].combinator.name, Equals("Pop1 + Pop2") );
     REQUIRE( model.nodes[2].combinator.operation == '+' );
 
-    REQUIRE( model.nodes[2].combinator.input_count == 2 );
+    REQUIRE( model.nodes[2].combinator.inputs.length() == 2 );
     REQUIRE( model.nodes[2].combinator.inputs[0] == 1 );
     REQUIRE( model.nodes[2].combinator.inputs[1] == 2 );
 
     // Constants ------------------------------------------
 
-    REQUIRE( model.constant_count == 4 );
+    REQUIRE( model.constants.length() == 4 );
 
     // Constant 0 -----------------------------------------
 

@@ -38,7 +38,7 @@ pub struct CConstant {
 
 impl From<Model> for CModel {
     fn from(value: Model) -> Self {
-        let (nodes_ptr, nodes_len, _nodes_cap) = vec_to_ptr(value.nodes);
+        let (nodes_ptr, nodes_len, _nodes_cap) = vec_to_ptr(value.nodes.into_values().collect::<Vec<Node>>());
         let (constants_ptr, constants_len, _constants_cap) = vec_to_ptr(value.constants);
 
         CModel {
@@ -54,11 +54,7 @@ impl From<Model> for CModel {
 impl From<Node> for CNode {
     fn from(value: Node) -> Self {
         match value {
-            Node::Population {
-                id,
-                name,
-                related_constant_name,
-            } => CNode::Population {
+            Node::Population { id, name, related_constant_name, links, .. } => CNode::Population {
                 id,
                 name: string_to_cstring(name),
                 related_constant_name: string_to_cstring(related_constant_name),

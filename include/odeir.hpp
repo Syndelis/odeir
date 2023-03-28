@@ -57,6 +57,9 @@ struct CModel {
 
 extern "C" {
 
+/// # Safety
+/// `json_str` must be a valid pointer to a null-terminated C string. The
+/// caller is responsible for freeing the returned `CModel` fields.
 CModel model_from_cstring(const char *json_str);
 
 } // extern "C"

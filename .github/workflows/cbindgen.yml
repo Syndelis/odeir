@@ -10,7 +10,7 @@ jobs:
   cbuild:
     runs-on: ubuntu-latest
     steps:
-      - uses: Syndelis/cbindgen-action@v1.1.0
+      - uses: Syndelis/cbindgen-action@master
         with:
-          output: include/odeir.h
+          output: include/odeir.hpp
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,6 +1,6 @@
-use crate::rustside::{MetaData, NodeId, Node, Constant, Model};
+use crate::rustside::{Constant, MetaData, Model, Node, NodeId};
 
-use std::ffi::{CString, CStr, c_char};
+use std::ffi::{c_char, CStr, CString};
 
 #[repr(C)]
 #[derive(Debug)]
@@ -54,12 +54,21 @@ impl From<Model> for CModel {
 impl From<Node> for CNode {
     fn from(value: Node) -> Self {
         match value {
-            Node::Population { id, name, related_constant_name } => CNode::Population {
+            Node::Population {
+                id,
+                name,
+                related_constant_name,
+            } => CNode::Population {
                 id,
                 name: string_to_cstring(name),
                 related_constant_name: string_to_cstring(related_constant_name),
             },
-            Node::Combinator { id, name, operation, inputs } => {
+            Node::Combinator {
+                id,
+                name,
+                operation,
+                inputs,
+            } => {
                 let (inputs_ptr, inputs_len, _cap) = inputs.into_raw_parts();
 
                 CNode::Combinator {
@@ -69,8 +78,8 @@ impl From<Node> for CNode {
                     input_count: inputs_len,
                     inputs: inputs_ptr,
                 }
-            },
-        } 
+            }
+        }
     }
 }
 
@@ -89,15 +98,17 @@ fn string_to_cstring(str: String) -> *const c_char {
 
 fn vec_to_ptr<T, U>(vec: Vec<T>) -> (*mut U, usize, usize)
 where
-    T: Into<U>
+    T: Into<U>,
 {
-    vec
-        .into_iter()
+    vec.into_iter()
         .map(|el: T| el.into())
         .collect::<Vec<U>>()
         .into_raw_parts()
 }
 
+/// # Safety
+/// `json_str` must be a valid pointer to a null-terminated C string. The
+/// caller is responsible for freeing the returned `CModel` fields.
 #[no_mangle]
 pub unsafe extern "C" fn model_from_cstring(json_str: *const c_char) -> CModel {
     let json_str = unsafe { CStr::from_ptr(json_str) };

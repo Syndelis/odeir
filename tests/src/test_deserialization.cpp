@@ -1,5 +1,5 @@
 #include <catch_amalgamated.hpp>
-#include <odeir.h>
+#include <odeir.hpp>
 
 using Catch::Matchers::Equals;
 

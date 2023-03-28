@@ -18,5 +18,7 @@ jobs:
           toolchain: nightly
           components: rustfmt
       
-      - name: Run Rustfmt Check
-        uses: actions-rust-lang/rustfmt@v1
+      - name: Rustfmt Check + Annotations
+        uses: Syndelis/rustfmt-action@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

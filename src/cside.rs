@@ -106,6 +106,9 @@ where
         .into_raw_parts()
 }
 
+/// # Safety
+/// `json_str` must be a valid pointer to a null-terminated C string. The
+/// caller is responsible for freeing the returned `CModel` fields.
 #[no_mangle]
 pub unsafe extern "C" fn model_from_cstring(json_str: *const c_char) -> CModel {
     let json_str = unsafe { CStr::from_ptr(json_str) };

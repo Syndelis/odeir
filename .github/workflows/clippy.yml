@@ -1,4 +1,4 @@
-name: FFI Tests
+name: Clippy Linting
 
 on:
   pull_request:
@@ -6,21 +6,20 @@ on:
       - '**'
 
 jobs:
-  test:
+  clippy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          submodules: "true"
-
+      
       - name: Use Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: nightly
-
-      - name: Build Tests
-        run: make -C tests build
-
-      - name: Run Tests
-        run: make -C tests run
+          components: clippy
+      
+      - name: Run Clippy Check
+        uses: actions-rs-plus/clippy-check@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features

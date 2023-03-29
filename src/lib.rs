@@ -3,6 +3,7 @@
 pub mod cside;
 pub mod rustside;
 pub mod transformations;
+pub mod boxed_slice;
 
 #[cfg(test)]
 mod tests {

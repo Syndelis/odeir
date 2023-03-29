@@ -15,6 +15,11 @@ struct MetaData {
 
 using NodeId = uint32_t;
 
+struct Link {
+    uint32_t sign;
+    NodeId node_id;
+};
+
 template<typename T>
 struct BoxedSlice {
     const T *ptr;
@@ -47,6 +52,7 @@ struct CNode {
         NodeId id;
         const char *name;
         const char *related_constant_name;
+        BoxedSlice<Link> links;
     };
 
     struct Combinator_Body {
@@ -77,6 +83,9 @@ struct CModel {
 
 extern "C" {
 
+/// # Safety
+/// `json_str` must be a valid pointer to a null-terminated C string. The
+/// caller is responsible for freeing the returned `CModel` fields.
 int model_from_cstring(const char *json_str, CModel *cmodel);
 
 } // extern "C"

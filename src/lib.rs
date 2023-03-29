@@ -1,25 +1,24 @@
 #![feature(vec_into_raw_parts)]
 
+pub mod boxed_slice;
 pub mod cside;
 pub mod rustside;
 pub mod transformations;
-pub mod boxed_slice;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_simple_json_is_valid() {
         use rustside::model_from_string;
         const SIMPLE_JSON_STR: &str = include_str!("../tests/fixtures/simple.json");
-        
+
         let model = model_from_string(SIMPLE_JSON_STR);
 
         assert!(model.is_ok(), "{}", model.unwrap_err());
 
-        let model = model.unwrap();
-
+        let _model = model.unwrap();
     }
 
     #[test]
@@ -47,5 +46,4 @@ mod tests {
 
         println!("{}", edo);
     }
-
 }

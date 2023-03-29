@@ -1,8 +1,8 @@
-use crate::rustside::{Constant, MetaData, Model, Node, NodeId, Link};
+use crate::rustside::{Link, MetaData, NodeId};
 
-use std::{ffi::{c_char, c_int, CStr, CString}, panic::{RefUnwindSafe, UnwindSafe}, fmt::Display};
+use std::ffi::c_char;
 
-use crate::boxed_slice::{BoxedSlice, catch_panic};
+use crate::boxed_slice::BoxedSlice;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -42,5 +42,3 @@ pub struct CConstant {
     pub name: *const c_char,
     pub value: f64,
 }
-
-

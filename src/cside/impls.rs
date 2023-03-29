@@ -1,8 +1,8 @@
-use std::ffi::{CString, c_char};
+use std::ffi::{c_char, CString};
 
-use crate::rustside::{Model, Node, Constant};
+use crate::rustside::{Constant, Model, Node};
 
-use super::structs::{CModel, CNode, CConstant};
+use super::structs::{CConstant, CModel, CNode};
 
 fn string_to_cstring(str: String) -> *const c_char {
     CString::new(str).unwrap().into_raw()
@@ -14,12 +14,10 @@ impl From<Model> for CModel {
 
         // Sorted mostly for tests, but isn't strictly necessary.
         // Either way, it shouldn't be that expensive.
-        nodes.sort_by_key(
-            |node| match node {
-                Node::Population { id, .. } => *id,
-                Node::Combinator { id, .. } => *id,
-            }
-        );
+        nodes.sort_by_key(|node| match node {
+            Node::Population { id, .. } => *id,
+            Node::Combinator { id, .. } => *id,
+        });
 
         CModel {
             meta_data: value.meta_data,
@@ -32,7 +30,12 @@ impl From<Model> for CModel {
 impl From<Node> for CNode {
     fn from(value: Node) -> Self {
         match value {
-            Node::Population { id, name, related_constant_name, links } => CNode::Population {
+            Node::Population {
+                id,
+                name,
+                related_constant_name,
+                links,
+            } => CNode::Population {
                 id,
                 name: string_to_cstring(name),
                 related_constant_name: string_to_cstring(related_constant_name),

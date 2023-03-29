@@ -1,4 +1,4 @@
-use std::{panic::UnwindSafe, ffi::c_int};
+use std::{ffi::c_int, panic::UnwindSafe};
 
 pub fn catch_panic(f: impl FnOnce() + UnwindSafe) -> c_int {
     result_to_int(std::panic::catch_unwind(f))

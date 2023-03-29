@@ -1,21 +1,27 @@
-use std::{ffi::{CStr, c_char, c_int, CString}, fmt::Display};
+use std::{
+    ffi::{c_char, c_int, CStr, CString},
+    fmt::Display,
+};
 
 use crate::{boxed_slice::catch_panic, rustside::Model};
 
 use self::structs::CModel;
 
-pub mod structs;
 pub mod impls;
+pub mod structs;
 
 fn print_unwrap<T, E: Display>(result: Result<T, E>) -> T {
     match result {
-        Ok(v) => v, 
+        Ok(v) => v,
         Err(e) => unsafe {
-            let err = e.to_string().replace("\0", "\\0");
+            let err = e.to_string().replace('\0', "\\0");
             let err = CString::new(err).unwrap();
-            libc::printf(b"Rust Error: %s\n\0".as_ptr() as *const c_char, err.as_ptr());
+            libc::printf(
+                b"Rust Error: %s\n\0".as_ptr() as *const c_char,
+                err.as_ptr(),
+            );
             panic!("{}", e);
-        }
+        },
     }
 }
 

@@ -1,15 +1,61 @@
 use crate::rustside::{Constant, MetaData, Model, Node, NodeId};
 
-use std::ffi::{c_char, CStr, CString};
+use std::{ffi::{c_char, c_int, CStr, CString}, panic::{RefUnwindSafe, UnwindSafe}, fmt::Display};
+
+#[repr(C)]
+pub struct BoxedSlice<T> {
+    ptr: *const T,
+    len: usize,
+    destructor: extern "C" fn(*const Self) -> c_int,
+}
+
+impl<T> std::fmt::Debug for BoxedSlice<T> {
+   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "RawVec<{}> {{ len: {}, ptr: {:p}}}", std::any::type_name::<T>(), self.len, self.ptr)
+    } 
+}
+
+impl<T> BoxedSlice<T> where T: RefUnwindSafe {
+    pub extern "C" fn destructor(this: *const Self) -> c_int {
+        catch_panic(move || {
+            let this = unsafe { &*this };
+            // If this is zero, there was no memory allocated.
+            if this.len == 0 {
+                return;
+            }
+            unsafe {
+                let slice = std::ptr::slice_from_raw_parts_mut(this.ptr as *mut T, this.len);
+                std::mem::drop(Box::from_raw(slice));
+            }
+        })
+    }
+}
+
+fn catch_panic(f: impl FnOnce() + UnwindSafe) -> c_int {
+    result_to_int(std::panic::catch_unwind(f))
+}
+
+impl<T, U> From<Vec<T>> for BoxedSlice<U>
+where
+    T: Into<U>,
+    U: RefUnwindSafe
+{
+    fn from(value: Vec<T>) -> Self {
+        let (ptr, len) = vec_to_ptr(value);
+        Self {
+            len,
+            ptr,
+            destructor: Self::destructor,
+        }
+    }
+}
 
 #[repr(C)]
 #[derive(Debug)]
 pub struct CModel {
     pub meta_data: MetaData,
-    pub nodes: *const CNode,
-    pub constants: *const CConstant,
-    pub node_count: usize,
-    pub constant_count: usize,
+    pub nodes: BoxedSlice<CNode>,
+    pub constants: BoxedSlice<CConstant>,
 }
 
 #[repr(C)]
@@ -24,8 +70,7 @@ pub enum CNode {
         id: NodeId,
         name: *const c_char,
         operation: char,
-        inputs: *const NodeId,
-        input_count: usize,
+        inputs: BoxedSlice<NodeId>,
     },
 }
 
@@ -38,15 +83,10 @@ pub struct CConstant {
 
 impl From<Model> for CModel {
     fn from(value: Model) -> Self {
-        let (nodes_ptr, nodes_len, _nodes_cap) = vec_to_ptr(value.nodes.into_values().collect::<Vec<Node>>());
-        let (constants_ptr, constants_len, _constants_cap) = vec_to_ptr(value.constants);
-
         CModel {
             meta_data: value.meta_data,
-            node_count: nodes_len,
-            constant_count: constants_len,
-            nodes: nodes_ptr,
-            constants: constants_ptr,
+            nodes: value.nodes.into(),
+            constants: value.constants.into(),
         }
     }
 }
@@ -64,17 +104,12 @@ impl From<Node> for CNode {
                 name,
                 operation,
                 inputs,
-            } => {
-                let (inputs_ptr, inputs_len, _cap) = inputs.into_raw_parts();
-
-                CNode::Combinator {
-                    id,
-                    name: string_to_cstring(name),
-                    operation,
-                    input_count: inputs_len,
-                    inputs: inputs_ptr,
-                }
-            }
+            } => CNode::Combinator {
+                id,
+                name: string_to_cstring(name),
+                operation,
+                inputs: inputs.into(),
+            },
         }
     }
 }
@@ -92,22 +127,46 @@ fn string_to_cstring(str: String) -> *const c_char {
     CString::new(str).unwrap().into_raw()
 }
 
-fn vec_to_ptr<T, U>(vec: Vec<T>) -> (*mut U, usize, usize)
+fn vec_to_ptr<T, U>(vec: Vec<T>) -> (*mut U, usize)
 where
     T: Into<U>,
 {
-    vec.into_iter()
+    let data = vec
+        .into_iter()
         .map(|el: T| el.into())
         .collect::<Vec<U>>()
-        .into_raw_parts()
+        .into_boxed_slice();
+    let data = Box::leak(data);
+    (data.as_mut_ptr(), data.len())
+}
+
+fn result_to_int<T, E>(result: Result<T, E>) -> c_int {
+    match result {
+        Ok(_) => 1,
+        Err(_) => 0,
+    }
+}
+
+fn print_unwrap<T, E: Display>(result: Result<T, E>) -> T {
+    match result {
+        Ok(v) => v, 
+        Err(e) => unsafe {
+            let err = e.to_string().replace("\0", "\\0");
+            let err = CString::new(err).unwrap();
+            libc::printf(b"Rust Error: %s\n\0".as_ptr() as *const c_char, err.as_ptr());
+            panic!("{}", e);
+        }
+    }
 }
 
 /// # Safety
 /// `json_str` must be a valid pointer to a null-terminated C string. The
 /// caller is responsible for freeing the returned `CModel` fields.
 #[no_mangle]
-pub unsafe extern "C" fn model_from_cstring(json_str: *const c_char) -> CModel {
-    let json_str = unsafe { CStr::from_ptr(json_str) };
-    let model: Model = serde_json::from_str(json_str.to_str().unwrap()).unwrap();
-    model.into()
+pub unsafe extern "C" fn model_from_cstring(json_str: *const c_char, cmodel: *mut CModel) -> c_int {
+    catch_panic(|| {
+        let json_str = print_unwrap(unsafe { CStr::from_ptr(json_str) }.to_str());
+        let model: Model = print_unwrap(serde_json::from_str(json_str));
+        cmodel.write(model.into())
+    })
 }

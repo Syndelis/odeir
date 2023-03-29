@@ -15,9 +15,9 @@ struct MetaData {
 
 using NodeId = uint32_t;
 
-struct Link {
-    uint32_t sign;
+struct CLink {
     NodeId node_id;
+    char sign;
 };
 
 template<typename T>
@@ -52,7 +52,7 @@ struct CNode {
         NodeId id;
         const char *name;
         const char *related_constant_name;
-        BoxedSlice<Link> links;
+        BoxedSlice<CLink> links;
     };
 
     struct Combinator_Body {

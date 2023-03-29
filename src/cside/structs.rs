@@ -1,4 +1,4 @@
-use crate::rustside::{Link, MetaData, NodeId};
+use crate::rustside::{MetaData, NodeId};
 
 use std::ffi::c_char;
 
@@ -14,19 +14,12 @@ pub struct CModel {
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct CLink {
-    pub sign: c_char,
-    pub node_id: NodeId,
-}
-
-#[repr(C)]
-#[derive(Debug)]
 pub enum CNode {
     Population {
         id: NodeId,
         name: *const c_char,
         related_constant_name: *const c_char,
-        links: BoxedSlice<Link>,
+        links: BoxedSlice<CLink>,
     },
     Combinator {
         id: NodeId,
@@ -34,6 +27,13 @@ pub enum CNode {
         operation: char,
         inputs: BoxedSlice<NodeId>,
     },
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct CLink {
+    pub node_id: NodeId,
+    pub sign: c_char,
 }
 
 #[repr(C)]

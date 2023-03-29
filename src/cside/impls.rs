@@ -1,8 +1,8 @@
 use std::ffi::{c_char, CString};
 
-use crate::rustside::{Constant, Model, Node};
+use crate::rustside::{Constant, Model, Node, Link};
 
-use super::structs::{CConstant, CModel, CNode};
+use super::structs::{CConstant, CModel, CNode, CLink};
 
 fn string_to_cstring(str: String) -> *const c_char {
     CString::new(str).unwrap().into_raw()
@@ -52,6 +52,15 @@ impl From<Node> for CNode {
                 operation,
                 inputs: inputs.into(),
             },
+        }
+    }
+}
+
+impl From<Link> for CLink {
+    fn from(value: Link) -> Self {
+        CLink {
+            sign: value.sign as c_char,
+            node_id: value.node_id,
         }
     }
 }

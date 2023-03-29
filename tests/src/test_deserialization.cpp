@@ -34,12 +34,20 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
     REQUIRE_THAT( model.nodes[0].population.name, Equals("Population 1") );
     REQUIRE_THAT( model.nodes[0].population.related_constant_name, Equals("Population 1_0") );
 
+    REQUIRE( model.nodes[0].population.links.length() == 1 );
+    REQUIRE( model.nodes[0].population.links[0].sign == '+' );
+    REQUIRE( model.nodes[0].population.links[0].node_id == 30 );
+
     // Node 1 ----------------------------------------------
 
     REQUIRE( model.nodes[1].tag == CNode::Tag::Population );
     REQUIRE( model.nodes[1].population.id == 2 );
     REQUIRE_THAT( model.nodes[1].population.name, Equals("Population 2") );
     REQUIRE_THAT( model.nodes[1].population.related_constant_name, Equals("Population 2_0") );
+
+    REQUIRE( model.nodes[1].population.links.length() == 1 );
+    REQUIRE( model.nodes[1].population.links[0].sign == '-' );
+    REQUIRE( model.nodes[1].population.links[0].node_id == 30 );
 
     // Node 2 ----------------------------------------------
 

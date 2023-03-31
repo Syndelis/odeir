@@ -2,13 +2,14 @@ CC=g++ -std=c++20
 CFLAGS=-fpermissive
 CFLAGS_LIBS=-c
 
+ODEIR_INCS=-I../target/cxxbridge/odeir/src/ -I../include/
 ODEIR_LIB=../target/debug/libodeir.a
 
 CATCH2_PATH=lib/catch2
 CATCH2_EXTRAS_PATH=$(CATCH2_PATH)/extras
 CATCH2_EXTRAS_SRC=$(wildcard $(CATCH2_EXTRAS_PATH)/*.cpp)
 
-INCLUDE_DIRS=-I./ -I../ -I../include/ -I$(CATCH2_EXTRAS_PATH)
+INCLUDE_DIRS=-I./ -I../ $(ODEIR_INCS) -I$(CATCH2_EXTRAS_PATH)
 
 LINK_DIRS=
 LINKS=

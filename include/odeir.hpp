@@ -1,20 +1,20 @@
+#ifndef ODEIR_HPP
+#define ODEIR_HPP
+
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <ostream>
 #include <new>
+#include "cxx.h"
 
 
-struct MetaData {
-    double start_time;
-    double end_time;
-    double delta_time;
-};
+struct Link;
 
 using NodeId = uint32_t;
 
-struct CNode {
+struct Node {
     enum class Tag {
         Population,
         Combinator,
@@ -22,16 +22,16 @@ struct CNode {
 
     struct Population_Body {
         NodeId id;
-        const char *name;
-        const char *related_constant_name;
+        rust::String name;
+        rust::String related_constant_name;
+        rust::Vec<Link> links;
     };
 
     struct Combinator_Body {
         NodeId id;
-        const char *name;
+        rust::String name;
         uint32_t operation;
-        const NodeId *inputs;
-        size_t input_count;
+        rust::Vec<NodeId> inputs;
     };
 
     Tag tag;
@@ -41,25 +41,11 @@ struct CNode {
     };
 };
 
-struct CConstant {
-    const char *name;
-    double value;
-};
-
-struct CModel {
-    MetaData meta_data;
-    const CNode *nodes;
-    const CConstant *constants;
-    size_t node_count;
-    size_t constant_count;
-};
-
 
 extern "C" {
 
-/// # Safety
-/// `json_str` must be a valid pointer to a null-terminated C string. The
-/// caller is responsible for freeing the returned `CModel` fields.
-CModel model_from_cstring(const char *json_str);
+void _this_function_guarantees_node_is_exported_by_cbindgen(Node *node);
 
 } // extern "C"
+
+#endif // ODEIR_HPP

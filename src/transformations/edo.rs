@@ -1,6 +1,6 @@
 use minijinja::{context, Environment};
 
-use crate::rustside::Model;
+use crate::Model;
 
 const EDO_TEMPLATE: &str = include_str!("../../templates/edo.txt");
 

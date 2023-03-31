@@ -3,3 +3,4 @@
 tests/fixtures/*.h*
 tests/test
 tests/obj/
+tests

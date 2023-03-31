@@ -2,3 +2,5 @@
 -I./include/
 -I./tests/
 -I./tests/lib/catch2/extras/
+-I./target/cxxbridge/odeir/src/
+-I./include/

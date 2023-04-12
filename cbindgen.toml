@@ -21,7 +21,7 @@ include_version = false
 # namespace = "my_namespace"
 namespaces = []
 using_namespaces = []
-sys_includes = ['stdexcept']
+sys_includes = ['stdexcept', 'vector']
 includes = ["opaque_rust_types.hpp"]
 no_includes = false
 after_includes = ""
@@ -72,9 +72,19 @@ renaming_overrides_prefixing = false
 [export.body]
 "BoxedSlice" = """
     ~BoxedSlice() {
-        if(!destructor(this)) {
+        if(destructor != nullptr && !destructor(this)) {
             std::printf("Failed to free BoxedSlice %p\\n", this);
         }
+    }
+    BoxedSlice(): ptr(nullptr), len(0), destructor(nullptr) {}
+    BoxedSlice(std::vector<T> vector): len(vector.size()) {
+        T* mem = new T[vector.size()];
+        std::copy(vector.begin(), vector.end(), mem);
+        this->destructor = [](const BoxedSlice* slice) {
+            delete[] slice->ptr;
+            return 1;
+        };
+        this->ptr = mem;
     }
     size_t length() const {
         return len;

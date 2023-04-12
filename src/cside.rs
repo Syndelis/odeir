@@ -1,12 +1,39 @@
+use serde::Deserialize;
+
 use crate::rustside::{Constant, MetaData, Model, Node, NodeId};
 
 use std::{ffi::{c_char, c_int, CStr, CString}, panic::{RefUnwindSafe, UnwindSafe}, fmt::Display};
+
+impl<T: Deserialize> serde::Deserialize for BoxedSlice<T> {
+fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de> {
+        let vec = Vec::deserialize(deserializer)?;
+        Ok(BoxedSlice::from(vec))
+    }
+}
+
+impl<T: Serialize> serde::Serialize for BoxedSlice<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        self.as_ref().serialize(serializer)
+    }
+}
 
 #[repr(C)]
 pub struct BoxedSlice<T> {
     ptr: *const T,
     len: usize,
     destructor: extern "C" fn(*const Self) -> c_int,
+}
+
+impl<T> AsRef<[T]> for  BoxedSlice<T> {
+    fn as_ref(&self) -> &[T] {
+        unsafe {
+            std::slice::from_raw_parts(self.ptr, self.len)
+        }
+     } 
 }
 
 impl<T> std::fmt::Debug for BoxedSlice<T> {

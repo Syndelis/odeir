@@ -50,82 +50,6 @@ where
     }
 }
 
-#[repr(C)]
-#[derive(Debug)]
-pub struct CModel {
-    pub meta_data: MetaData,
-    pub nodes: BoxedSlice<CNode>,
-    pub constants: BoxedSlice<CConstant>,
-}
-
-#[repr(C)]
-#[derive(Debug)]
-pub enum CNode {
-    Population {
-        id: NodeId,
-        name: *const c_char,
-        related_constant_name: *const c_char,
-    },
-    Combinator {
-        id: NodeId,
-        name: *const c_char,
-        operation: char,
-        inputs: BoxedSlice<NodeId>,
-    },
-}
-
-#[repr(C)]
-#[derive(Debug)]
-pub struct CConstant {
-    pub name: *const c_char,
-    pub value: f64,
-}
-
-impl From<Model> for CModel {
-    fn from(value: Model) -> Self {
-        CModel {
-            meta_data: value.meta_data,
-            nodes: value.nodes.into(),
-            constants: value.constants.into(),
-        }
-    }
-}
-
-impl From<Node> for CNode {
-    fn from(value: Node) -> Self {
-        match value {
-            Node::Population {
-                id,
-                name,
-                related_constant_name,
-            } => CNode::Population {
-                id,
-                name: string_to_cstring(name),
-                related_constant_name: string_to_cstring(related_constant_name),
-            },
-            Node::Combinator {
-                id,
-                name,
-                operation,
-                inputs,
-            } => CNode::Combinator {
-                id,
-                name: string_to_cstring(name),
-                operation,
-                inputs: inputs.into(),
-            },
-        }
-    }
-}
-
-impl From<Constant> for CConstant {
-    fn from(value: Constant) -> Self {
-        CConstant {
-            name: string_to_cstring(value.name),
-            value: value.value,
-        }
-    }
-}
 
 fn string_to_cstring(str: String) -> *const c_char {
     CString::new(str).unwrap().into_raw()
@@ -161,13 +85,4 @@ fn print_unwrap<T, E: Display>(result: Result<T, E>) -> T {
             panic!("{}", e);
         }
     }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn model_from_cstring(json_str: *const c_char, cmodel: *mut CModel) -> c_int {
-    catch_panic(|| {
-        let json_str = print_unwrap(unsafe { CStr::from_ptr(json_str) }.to_str());
-        let model: Model = print_unwrap(serde_json::from_str(json_str));
-        cmodel.write(model.into())
-    })
 }

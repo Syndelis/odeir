@@ -2,12 +2,15 @@ use serde::{Deserialize, Serialize};
 
 pub type NodeId = u32;
 
+#[derive(Serialize, Deserialize, Debug)]
+struct OpaqueVec<T>(Vec<T>);
+
 #[repr(C)]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     pub meta_data: MetaData,
-    pub nodes: Vec<Node>,
+    pub nodes: Box<OpaqueVec<Node>>,
     pub constants: Vec<Constant>,
 }
 

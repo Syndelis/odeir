@@ -22,7 +22,7 @@ include_version = false
 namespaces = []
 using_namespaces = []
 sys_includes = ['stdexcept']
-includes = []
+includes = ["opaque_rust_types.hpp"]
 no_includes = false
 after_includes = ""
 
@@ -126,8 +126,8 @@ derive_helper_methods = false
 derive_const_casts = false
 derive_mut_casts = false
 # cast_assert_name = "ASSERT"
-derive_tagged_enum_destructor = false
-derive_tagged_enum_copy_constructor = false
+derive_tagged_enum_destructor = true
+derive_tagged_enum_copy_constructor = true
 enum_class = true
 private_default_tagged_enum_constructor = false
 

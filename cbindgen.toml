@@ -76,9 +76,11 @@ renaming_overrides_prefixing = false
             std::printf("Failed to free BoxedSlice %p\\n", this);
         }
     }
+
     BoxedSlice(): ptr(nullptr), len(0), destructor(nullptr) {}
+
     BoxedSlice(std::vector<T> vector): len(vector.size()) {
-        T* mem = new T[vector.size()];
+        T* mem = new T[len];
         std::copy(vector.begin(), vector.end(), mem);
         this->destructor = [](const BoxedSlice* slice) {
             delete[] slice->ptr;
@@ -86,9 +88,11 @@ renaming_overrides_prefixing = false
         };
         this->ptr = mem;
     }
+
     size_t length() const {
         return len;
     }
+
     const T& operator[](size_t idx) const {
         if (idx < len) {
             return ptr[idx];

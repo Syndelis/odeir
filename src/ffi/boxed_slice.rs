@@ -1,22 +1,20 @@
-use serde::Deserialize;
+use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
-use crate::rustside::{Constant, MetaData, Model, Node, NodeId};
+use std::{ffi::{c_char, c_int, CString}, panic::{RefUnwindSafe, UnwindSafe}, fmt::Display};
 
-use std::{ffi::{c_char, c_int, CStr, CString}, panic::{RefUnwindSafe, UnwindSafe}, fmt::Display};
-
-impl<T: Deserialize> serde::Deserialize for BoxedSlice<T> {
+impl<'de, T: Deserialize<'de> + RefUnwindSafe> Deserialize<'de> for BoxedSlice<T> {
 fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de> {
-        let vec = Vec::deserialize(deserializer)?;
+        D: Deserializer<'de> {
+        let vec = Vec::<T>::deserialize(deserializer)?;
         Ok(BoxedSlice::from(vec))
     }
 }
 
-impl<T: Serialize> serde::Serialize for BoxedSlice<T> {
+impl<T: Serialize> Serialize for BoxedSlice<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
-            S: serde::Serializer {
+            S: Serializer {
         self.as_ref().serialize(serializer)
     }
 }

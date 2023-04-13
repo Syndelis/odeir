@@ -22,7 +22,7 @@ include_version = false
 namespaces = []
 using_namespaces = []
 sys_includes = ['stdexcept', 'vector']
-includes = ["opaque_rust_types.hpp"]
+includes = ["opaque_rust_types.hpp", "ustr.hpp"]
 no_includes = false
 after_includes = ""
 
@@ -63,6 +63,9 @@ exclude = [
     "Vec",
     "String",
     "HashMap",
+    "ustr",
+    "ustr_hash",
+    "ustr_len",
 ]
 # prefix = "CAPI_"
 item_types = []

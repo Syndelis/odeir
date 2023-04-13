@@ -1,8 +1,6 @@
 #include <catch_amalgamated.hpp>
 #include <odeir.hpp>
 
-using Catch::Matchers::Equals;
-
 TEST_CASE( "BoxedSlice Semantics" ) {
     auto empty_slice = BoxedSlice<int>();
 

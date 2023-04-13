@@ -6,6 +6,7 @@ use std::{ffi::{c_char, CStr}, str::FromStr};
 use ffi::{BoxedSlice, HashWrapper};
 
 use serde::{Deserialize, Serialize};
+use ustr::Ustr;
 
 pub type NodeId = u32;
 
@@ -31,13 +32,13 @@ pub struct MetaData {
 pub enum Node {
     Population {
         id: NodeId,
-        name: String,
-        related_constant_name: String,
+        name: Ustr,
+        related_constant_name: Ustr,
         links: BoxedSlice<Link>,
     },
     Combinator {
         id: NodeId,
-        name: String,
+        name: Ustr,
         operation: char,
         inputs: BoxedSlice<NodeId>,
     },
@@ -53,7 +54,7 @@ pub struct Link {
 #[repr(C)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Constant {
-    pub name: String,
+    pub name: Ustr,
     pub value: f64,
 }
 
@@ -112,8 +113,8 @@ mod tests {
         } = pop_1
         {
             assert_eq!(*id, 1);
-            assert_eq!(name, "Population 1");
-            assert_eq!(related_constant_name, "Population 1_0");
+            assert_eq!(name.as_str(), "Population 1");
+            assert_eq!(related_constant_name.as_str(), "Population 1_0");
             assert_eq!(links.as_ref().len(), 1);
             
             let link = &links.as_ref()[0];
@@ -134,8 +135,8 @@ mod tests {
         } = pop_2
         {
             assert_eq!(*id, 2);
-            assert_eq!(name, "Population 2");
-            assert_eq!(related_constant_name, "Population 2_0");
+            assert_eq!(name.as_str(), "Population 2");
+            assert_eq!(related_constant_name.as_str(), "Population 2_0");
             assert_eq!(links.as_ref().len(), 1);
 
             let link = &links.as_ref()[0];
@@ -156,7 +157,7 @@ mod tests {
         } = comb_30
         {
             assert_eq!(*id, 30);
-            assert_eq!(name, "Pop1 + Pop2");
+            assert_eq!(name.as_str(), "Pop1 + Pop2");
             assert_eq!(*operation, '+');
             assert_eq!(inputs.as_ref().len(), 2);
             assert_eq!(inputs.as_ref()[0], 1);

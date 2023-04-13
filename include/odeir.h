@@ -9,8 +9,6 @@
 #include "opaque_rust_types.hpp"
 
 
-struct String;
-
 struct MetaData {
     double start_time;
     double end_time;
@@ -18,6 +16,11 @@ struct MetaData {
 };
 
 using NodeId = uint32_t;
+
+struct Link {
+    uint32_t sign;
+    uint32_t node_id;
+};
 
 template<typename T>
 struct BoxedSlice {
@@ -65,6 +68,7 @@ struct Node {
         NodeId id;
         String name;
         String related_constant_name;
+        BoxedSlice<Link> links;
     };
 
     struct Combinator_Body {
@@ -98,6 +102,11 @@ struct Node {
     }
 };
 
+template<typename K, typename V>
+struct HashWrapper {
+    Box<HashMap<K, V>> _0;
+};
+
 struct Constant {
     String name;
     double value;
@@ -105,7 +114,7 @@ struct Constant {
 
 struct Model {
     MetaData meta_data;
-    BoxedSlice<Node> nodes;
+    HashWrapper<NodeId, Node> nodes;
     BoxedSlice<Constant> constants;
 };
 

@@ -58,7 +58,12 @@ usize_is_size_t = true
 
 [export]
 include = []
-exclude = []
+exclude = [
+    "Box",
+    "Vec",
+    "String",
+    "HashMap",
+]
 # prefix = "CAPI_"
 item_types = []
 renaming_overrides_prefixing = false

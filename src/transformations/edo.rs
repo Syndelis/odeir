@@ -26,7 +26,7 @@ mod tests {
 
         const ABC_JSON_STR: &str = include_str!("../../tests/fixtures/abc.json");
 
-        let model = Model::from_str(ABC_JSON_STR).unwrap();
+        let model = serde_json::from_str::<Model>(ABC_JSON_STR).unwrap();
 
         let edo = render_edo(model);
 

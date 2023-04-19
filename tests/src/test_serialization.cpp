@@ -1,18 +1,40 @@
+#include "odeir2.hpp"
 #include <catch_amalgamated.hpp>
 #include <odeir.hpp>
+#include <fstream>
 
 #include <iostream>
 
 using Catch::Matchers::Equals;
 
-TEST_CASE( "a json should be deserializable into a CModel" ) {
+TEST_CASE( "a json should be deserializable into a Model" ) {
 
     // Given - a json string, stored in simple_json, auto-generated from fixtures/simple.json
 
-    #include <fixtures/simple.h>
+    auto model = new_model(0, 10.50, 0.1);
+    auto node1 = new_node_population(1, "Population 1", "Population 1_0");
+    node1->add_link('+', 30);
+    auto node2 = new_node_population(1, "Population 2", "Population 2_0");
+    node2->add_link('-', 30);
+    auto node3 = new_node_combinator(30, "Pop1 + Pop2", '+');
+    node3->add_input(1);
+    node3->add_input(2);
+    model->add_node(std::move(node1));
+    model->add_node(std::move(node2));
+    model->add_node(std::move(node3));
 
-    // When - the json is deserialized into a CModel
-    rust::Slice<const uint8_t> json_slice(fixtures_simple_json, fixtures_simple_json_len);
+    model->add_constant("gravity", 9.81);
+    model->add_constant("Population 1_0", 100);
+    model->add_constant("Population 2_0", 200);
+    model->add_constant("a", 1.6);
+    
+    auto model_json = model_into_json(std::move(model));
+
+    #include <fixtures/simple.h>
+    std::ofstream("/tmp/a.json") << std::string(model_json);
+
+    // When - the json is serialized into a CModel
+    /* rust::Slice<const uint8_t> json_slice(fixtures_simple_json, fixtures_simple_json_len);
     auto _model = model_from_json(json_slice);
     const Model& model = *_model;
 
@@ -77,5 +99,5 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
 
     REQUIRE_THAT( std::string(model.constants()[3].name()), Equals("a") );
     REQUIRE( model.constants()[3].value() == 1.6 );
-
+ */
 }

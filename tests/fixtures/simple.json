@@ -1,6 +1,6 @@
 {
     "meta_data": {
-        "start_time": 0,
+        "start_time": 0.0,
         "end_time": 10.50,
         "delta_time": 0.1
     },
@@ -44,11 +44,11 @@
         },
         {
             "name": "Population 1_0",
-            "value": 100
+            "value": 100.0
         },
         {
             "name": "Population 2_0",
-            "value": 200
+            "value": 200.0
         },
         {
             "name": "a",

@@ -1,7 +1,7 @@
 pub mod ffi;
 pub mod transformations;
 
-use std::{ffi::{c_char, CStr}, str::FromStr, collections::HashMap};
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -53,16 +53,21 @@ pub struct Constant {
 #[cfg(test)]
 mod tests {
 
+    use assert_json_diff::assert_json_eq;
+    use serde_json::Value;
+
     use super::*;
+    use crate::ffi::model_into_json;
+
+    const SIMPLE_JSON: &str = include_str!("../tests/fixtures/simple.json");
 
     #[test]
-    fn simple_is_ser() {
-
+    fn simple_is_de() {
         // Given - A JSON representing a model with:
         // - 3 Nodes: 2 Populations and 1 Combinator
         // - 4 Constants
 
-        const SIMPLE_JSON: &str = include_str!("../tests/fixtures/simple.json");
+        // SIMPLE_JSON is included above
 
         // When - We deserialize the JSON into a Model
 
@@ -91,7 +96,7 @@ mod tests {
             assert_eq!(name.as_str(), "Population 1");
             assert_eq!(related_constant_name.as_str(), "Population 1_0");
             assert_eq!(links.len(), 1);
-            
+
             let link = &links[0];
 
             assert_eq!(link.sign, '+');
@@ -140,7 +145,72 @@ mod tests {
         } else {
             panic!("Expected Node::Combinator for id 30");
         }
-
     }
 
+    #[test]
+    fn simple_is_ser() {
+        // Given - We've recreated Simple's model in Rust
+
+        let node1 = Node::Population {
+            id: 1,
+            name: "Population 1".into(),
+            related_constant_name: "Population 1_0".into(),
+            links: vec![Link { sign: '+', node_id: 30 }],
+        };
+
+        let node2 = Node::Population {
+            id: 2,
+            name: "Population 2".into(),
+            related_constant_name: "Population 2_0".into(),
+            links: vec![Link { sign: '-', node_id: 30 }],
+        };
+
+        let node30 = Node::Combinator {
+            id: 30,
+            name: "Pop1 + Pop2".into(),
+            operation: '+',
+            inputs: vec![1, 2],
+        };
+
+        let mut nodes = HashMap::new();
+
+        nodes.insert(1, node1);
+        nodes.insert(2, node2);
+        nodes.insert(30, node30);
+
+        let model = Model {
+            nodes,
+            meta_data: MetaData { start_time: 0.0, end_time: 10.5, delta_time: 0.1 },
+            constants: vec![
+                Constant {
+                    name: "gravity".into(),
+                    value: 9.81,
+                },
+                Constant {
+                    name: "Population 1_0".into(),
+                    value: 100.0,
+                },
+                Constant {
+                    name: "Population 2_0".into(),
+                    value: 200.0,
+                },
+                Constant {
+                    name: "a".into(),
+                    value: 1.6,
+                }
+            ]
+        };
+
+        // When - We serialize the model into JSON
+
+        let model_json = model_into_json(Box::new(model));
+
+        // Then - The JSON is identical to simple.json
+
+        let model_json: Value = serde_json::from_str(&model_json).unwrap();
+        let simple_json: Value = serde_json::from_str(SIMPLE_JSON).unwrap();
+
+        assert_json_eq!(model_json, simple_json);
+
+    }
 }

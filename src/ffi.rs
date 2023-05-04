@@ -1,4 +1,5 @@
-use std::ffi::c_char;
+use std::collections::hash_map::Keys;
+use std::{ffi::c_char, iter::Copied};
 
 use std::collections::HashMap;
 
@@ -20,21 +21,28 @@ fn option_to_ptr(option: Option<&Node>) -> OptionPtr<Node> {
 
 #[cxx::bridge]
 mod ffi {
+    enum NodeTag {
+        Population,
+        Combinator,
+    }
     extern "Rust" {
         type Constant;
         pub fn name(self: &Constant) -> &str;
         pub fn value(self: &Constant) -> f64;
+
         type Model;
         pub fn add_node(self: &mut Model, node: Box<Node>);
         pub fn add_constant(self: &mut Model, name: &str, value: f64);
         pub fn meta_data(self: &Model) -> &MetaData;
         pub fn constants(self: &Model) -> &[Constant];
         pub fn get_node(self: &Model, id: u32) -> *const Node;
+        pub unsafe fn node_ids(self: &Model, out_node_ids: *mut u32) -> usize;
 
         type MetaData;
         pub fn start_time(self: &MetaData) -> f64;
         pub fn end_time(self: &MetaData) -> f64;
         pub fn delta_time(self: &MetaData) -> f64;
+
         type Node;
         pub fn add_link(self: &mut Node, sign: u32, node_id: u32);
         pub fn add_input(self: &mut Node, input: u32);
@@ -42,6 +50,10 @@ mod ffi {
         pub fn name(self: &Node) -> &str;
         pub fn related_constant_name(self: &Node) -> &str;
         pub fn operation(self: &Node) -> *const u32;
+        pub fn tag(self: &Node) -> NodeTag;
+        pub fn inputs(self: &Node) -> &[u32];
+        pub fn links(self: &Node) -> &[Link];
+
         type Link;
         pub fn sign(self: &Link) -> u32;
         pub fn node_id(self: &Link) -> u32;
@@ -137,6 +149,22 @@ impl Model {
     pub fn constants(&self) -> &[Constant] {
         &self.constants
     }
+
+    /// # Safety
+    /// `out_node_ids` must be a pointer to a buffer of at least
+    /// `self.nodes.len()` `NodeId`s.
+    pub unsafe fn node_ids(&self, out_node_ids: *mut NodeId) -> usize {
+        let mut length = 0;
+        let mut ptr_walker = out_node_ids;
+
+        for node_id in self.nodes.keys() {
+            *ptr_walker = *node_id;
+            ptr_walker = ptr_walker.add(1);
+            length += 1;
+        }
+
+        length
+    }
     pub fn get_node(&self, id: u32) -> OptionPtr<Node> {
         option_to_ptr(self.nodes.get(&id))
     }
@@ -186,7 +214,29 @@ impl Node {
             }
         }
     }
+
+    pub fn tag(&self) -> ffi::NodeTag {
+        match self {
+            Node::Population { .. } => ffi::NodeTag::Population,
+            Node::Combinator { .. } => ffi::NodeTag::Combinator,
+        }
+    }
+
+    pub fn inputs(&self) -> &[NodeId] {
+        match self {
+            Node::Population { .. } => &[],
+            Node::Combinator { inputs, .. } => inputs,
+        }
+    }
+
+    pub fn links(&self) -> &[Link] {
+        match self {
+            Node::Population { links, .. } => links,
+            Node::Combinator { .. } => &[],
+        }
+    }
 }
+
 impl Link {
     pub fn sign(&self) -> u32 {
         self.sign as u32

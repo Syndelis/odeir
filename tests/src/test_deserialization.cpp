@@ -1,3 +1,4 @@
+#include "odeir.hpp"
 #include <catch_amalgamated.hpp>
 #include <odeir.hpp>
 
@@ -12,6 +13,7 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
     #include <fixtures/simple.h>
 
     // When - the json is deserialized into a CModel
+
     rust::Slice<const uint8_t> json_slice(fixtures_simple_json, fixtures_simple_json_len);
     auto _model = model_from_json(json_slice);
     const Model& model = *_model;
@@ -27,32 +29,49 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
 
     // Nodes -----------------------------------------------
     
-    // REQUIRE( model.nodes.length() == 3 );
+    // REQUIRE( model.nodes().length() == 3 );
 
-    // Node 0 ----------------------------------------------
+    auto node_ids = new int[10];
+    int node_count = model.node_ids(node_ids);
 
-    // REQUIRE( model.nodes[0].tag == CNode::Tag::Population );
-    // REQUIRE( model.nodes[0].population.id == 1 );
-    // REQUIRE_THAT( model.nodes[0].population.name(), Equals("Population 1") );
-    // REQUIRE_THAT( model.nodes[0].population.related_constant_name(), Equals("Population 1_0") );
+    std::vector node_ids_vec(node_ids, node_ids + node_count);
+    free(node_ids);
+
+    REQUIRE( node_ids_vec.size() == 3 );
+    REQUIRE_THAT( node_ids_vec, Catch::Matchers::UnorderedEquals(std::vector<int>{ 30, 2, 1 }));
 
     // Node 1 ----------------------------------------------
 
-    // REQUIRE( model.nodes[1].tag == CNode::Tag::Population );
-    // REQUIRE( model.nodes[1].population.id == 2 );
-    // REQUIRE_THAT( model.nodes[1].population.name(), Equals("Population 2") );
-    // REQUIRE_THAT( model.nodes[1].population.related_constant_name(), Equals("Population 2_0") );
+    auto node1 = model.get_node(1);
+
+    REQUIRE( node1->tag() == NodeTag::Population );
+    REQUIRE( node1->id() == 1 );
+    REQUIRE_THAT( node1->name().data(), Equals("Population 1") );
+    REQUIRE_THAT( node1->related_constant_name().data(), Equals("Population 1_0") );
 
     // Node 2 ----------------------------------------------
 
-    // REQUIRE( model.nodes[2].tag == CNode::Tag::Combinator );
-    // REQUIRE( model.nodes[2].combinator.id == 30 );
-    // REQUIRE_THAT( model.nodes[2].combinator.name(), Equals("Pop1 + Pop2") );
-    // REQUIRE( model.nodes[2].combinator.operation == '+' );
+    auto node2 = model.get_node(2);
 
-    // REQUIRE( model.nodes[2].combinator.inputs.length() == 2 );
-    // REQUIRE( model.nodes[2].combinator.inputs[0] == 1 );
-    // REQUIRE( model.nodes[2].combinator.inputs[1] == 2 );
+    REQUIRE( node2->tag() == NodeTag::Population );
+    REQUIRE( node2->id() == 2 );
+
+    // TODO: This is being corrupted. Correctly starts with "Population 2", but ends with one or two garbage characters.
+    REQUIRE_THAT( node2->name().data(), Equals("Population 2") );
+    REQUIRE_THAT( node2->related_constant_name().data(), Equals("Population 2_0") );
+
+    // Node 30 ----------------------------------------------
+
+    auto node30 = model.get_node(30);
+
+    REQUIRE( node30->tag() == NodeTag::Combinator );
+    REQUIRE( node30->id() == 30 );
+    REQUIRE_THAT( node30->name().data(), Equals("Pop1 + Pop2") );
+    // REQUIRE( node30.operation() == '+' );
+
+    // REQUIRE( node30.inputs.length() == 2 );
+    // REQUIRE( node30.inputs[0] == 1 );
+    // REQUIRE( node30.inputs[1] == 2 );
 
     // Constants ------------------------------------------
 

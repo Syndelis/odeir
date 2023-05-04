@@ -155,14 +155,20 @@ mod tests {
             id: 1,
             name: "Population 1".into(),
             related_constant_name: "Population 1_0".into(),
-            links: vec![Link { sign: '+', node_id: 30 }],
+            links: vec![Link {
+                sign: '+',
+                node_id: 30,
+            }],
         };
 
         let node2 = Node::Population {
             id: 2,
             name: "Population 2".into(),
             related_constant_name: "Population 2_0".into(),
-            links: vec![Link { sign: '-', node_id: 30 }],
+            links: vec![Link {
+                sign: '-',
+                node_id: 30,
+            }],
         };
 
         let node30 = Node::Combinator {
@@ -180,7 +186,11 @@ mod tests {
 
         let model = Model {
             nodes,
-            meta_data: MetaData { start_time: 0.0, end_time: 10.5, delta_time: 0.1 },
+            meta_data: MetaData {
+                start_time: 0.0,
+                end_time: 10.5,
+                delta_time: 0.1,
+            },
             constants: vec![
                 Constant {
                     name: "gravity".into(),
@@ -197,8 +207,8 @@ mod tests {
                 Constant {
                     name: "a".into(),
                     value: 1.6,
-                }
-            ]
+                },
+            ],
         };
 
         // When - We serialize the model into JSON
@@ -211,6 +221,5 @@ mod tests {
         let simple_json: Value = serde_json::from_str(SIMPLE_JSON).unwrap();
 
         assert_json_eq!(model_json, simple_json);
-
     }
 }

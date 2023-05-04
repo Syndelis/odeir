@@ -2,11 +2,15 @@ use std::ffi::c_char;
 
 use std::collections::HashMap;
 
-pub use crate::{Model, MetaData, Node, Link, Constant, NodeId};
+pub use crate::{Constant, Link, MetaData, Model, Node, NodeId};
 
 type OptionPtr<T> = *const T;
-fn none_ptr<T>() -> OptionPtr<T> { std::ptr::null() }
-fn some_ptr<T>(t: &T) -> *const T { t as *const T }
+fn none_ptr<T>() -> OptionPtr<T> {
+    std::ptr::null()
+}
+fn some_ptr<T>(t: &T) -> *const T {
+    t as *const T
+}
 fn option_to_ptr(option: Option<&Node>) -> OptionPtr<Node> {
     match option {
         Some(node) => some_ptr(node),
@@ -18,30 +22,29 @@ fn option_to_ptr(option: Option<&Node>) -> OptionPtr<Node> {
 mod ffi {
     extern "Rust" {
         type Constant;
-        pub fn name(self: &Constant) -> &str ;
-        pub fn value(self: &Constant) -> f64 ;
+        pub fn name(self: &Constant) -> &str;
+        pub fn value(self: &Constant) -> f64;
         type Model;
         pub fn add_node(self: &mut Model, node: Box<Node>);
         pub fn add_constant(self: &mut Model, name: &str, value: f64);
-        pub fn meta_data(self: &Model) -> &MetaData ;
-        pub fn constants(self: &Model) -> &[Constant] ;
-        pub fn get_node(self: &Model, id: u32) -> *const Node ;
+        pub fn meta_data(self: &Model) -> &MetaData;
+        pub fn constants(self: &Model) -> &[Constant];
+        pub fn get_node(self: &Model, id: u32) -> *const Node;
 
         type MetaData;
-        pub fn start_time(self: &MetaData) -> f64 ;
-        pub fn end_time(self: &MetaData) -> f64 ;
-        pub fn delta_time(self: &MetaData) -> f64 ;
+        pub fn start_time(self: &MetaData) -> f64;
+        pub fn end_time(self: &MetaData) -> f64;
+        pub fn delta_time(self: &MetaData) -> f64;
         type Node;
         pub fn add_link(self: &mut Node, sign: u32, node_id: u32);
         pub fn add_input(self: &mut Node, input: u32);
-        pub fn id(self: &Node) -> &u32 ;
-        pub fn name(self: &Node) -> &str ;
-        pub fn related_constant_name(self: &Node) -> &str ;
-        pub fn operation(self: &Node) -> *const u32 ;
+        pub fn id(self: &Node) -> &u32;
+        pub fn name(self: &Node) -> &str;
+        pub fn related_constant_name(self: &Node) -> &str;
+        pub fn operation(self: &Node) -> *const u32;
         type Link;
-        pub fn sign(self: &Link) -> u32 ;
-        pub fn node_id(self: &Link) -> u32 ;
-
+        pub fn sign(self: &Link) -> u32;
+        pub fn node_id(self: &Link) -> u32;
 
         pub fn new_model(start_time: f64, end_time: f64, delta_time: f64) -> Box<Model>;
         pub fn new_node_population(id: u32, name: &str, related_constant_name: &str) -> Box<Node>;
@@ -54,7 +57,11 @@ mod ffi {
 }
 
 pub fn new_model(start_time: f64, end_time: f64, delta_time: f64) -> Box<Model> {
-    let meta_data = MetaData { start_time, end_time, delta_time };
+    let meta_data = MetaData {
+        start_time,
+        end_time,
+        delta_time,
+    };
     Box::new(Model {
         meta_data,
         nodes: HashMap::new(),
@@ -62,7 +69,7 @@ pub fn new_model(start_time: f64, end_time: f64, delta_time: f64) -> Box<Model> 
     })
 }
 pub fn new_node_population(id: u32, name: &str, related_constant_name: &str) -> Box<Node> {
- Box::new(Node::Population {
+    Box::new(Node::Population {
         id,
         name: name.into(),
         related_constant_name: related_constant_name.into(),
@@ -80,7 +87,10 @@ pub fn new_node_combinator(id: u32, name: &str, operation: u32) -> Box<Node> {
 
 impl Node {
     pub fn add_link(self: &mut Node, sign: u32, node_id: u32) {
-        let link = Link { sign: u32_to_char(sign), node_id };
+        let link = Link {
+            sign: u32_to_char(sign),
+            node_id,
+        };
         match self {
             Node::Population { links, .. } => {
                 links.push(link);
@@ -115,7 +125,10 @@ impl Model {
         }
     }
     pub fn add_constant(self: &mut Model, name: &str, value: f64) {
-        let constant = Constant { name: name.to_string(), value };
+        let constant = Constant {
+            name: name.to_string(),
+            value,
+        };
         self.constants.push(constant);
     }
     pub fn meta_data(&self) -> &MetaData {
@@ -156,7 +169,10 @@ impl Node {
     }
     pub fn related_constant_name(&self) -> &str {
         match self {
-            Node::Population { related_constant_name, .. } => &related_constant_name,
+            Node::Population {
+                related_constant_name,
+                ..
+            } => &related_constant_name,
             Node::Combinator { .. } => "",
         }
     }
@@ -165,7 +181,9 @@ impl Node {
             Node::Population { .. } => none_ptr(),
             // Safety: this is not unsafe at all. Every char is a valid u32, but not the other way
             // around
-            Node::Combinator { operation, .. } => some_ptr(unsafe { std::mem::transmute(operation) }),
+            Node::Combinator { operation, .. } => {
+                some_ptr(unsafe { std::mem::transmute(operation) })
+            }
         }
     }
 }
@@ -186,7 +204,6 @@ impl Constant {
         self.value
     }
 }
-
 
 pub fn u32_to_char(u: u32) -> char {
     char::from_u32(u).expect("Invalid char")

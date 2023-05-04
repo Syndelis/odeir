@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 const FFI_SRC: &str = "src/ffi.rs";
 
 fn main() {
-    cxx_build::bridge(FFI_SRC)  // returns a cc::Build
+    cxx_build::bridge(FFI_SRC) // returns a cc::Build
         .compile("odeircpp");
 
     let target_dir = std::env::var("CARGO_TARGET_DIR").unwrap_or("target".to_string());

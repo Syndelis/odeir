@@ -5,7 +5,6 @@ use crate::Model;
 const ODE_TEMPLATE: &str = include_str!("../../templates/ode.txt");
 
 pub fn render_ode(model: Model) -> String {
-
     let mut env = Environment::new();
 
     let mut ctx = context! {
@@ -13,7 +12,6 @@ pub fn render_ode(model: Model) -> String {
     };
 
     env.render_str(ODE_TEMPLATE, &mut ctx).unwrap()
-
 }
 
 #[cfg(test)]

@@ -1,3 +1,4 @@
 -std=c++20
+-I./include/
+-I./tests/
 -I./tests/lib/catch2/extras/
--I./tests/fixtures/

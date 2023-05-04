@@ -1,1 +1,1 @@
-pub mod edo;
+pub mod ode;

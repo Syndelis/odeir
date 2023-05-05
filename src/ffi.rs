@@ -36,7 +36,7 @@ mod ffi {
         pub fn meta_data(self: &Model) -> &MetaData;
         pub fn constants(self: &Model) -> &[Constant];
         pub fn get_node(self: &Model, id: u32) -> *const Node;
-        pub unsafe fn node_ids(self: &Model, out_node_ids: *mut u32) -> usize;
+        pub fn node_ids(self: &Model) -> Vec<u32>;
 
         type MetaData;
         pub fn start_time(self: &MetaData) -> f64;
@@ -47,8 +47,8 @@ mod ffi {
         pub fn add_link(self: &mut Node, sign: u32, node_id: u32);
         pub fn add_input(self: &mut Node, input: u32);
         pub fn id(self: &Node) -> &u32;
-        pub fn name(self: &Node) -> &str;
-        pub fn related_constant_name(self: &Node) -> &str;
+        pub fn name(self: &Node) -> String;
+        pub fn related_constant_name(self: &Node) -> String;
         pub fn operation(self: &Node) -> *const u32;
         pub fn tag(self: &Node) -> NodeTag;
         pub fn inputs(self: &Node) -> &[u32];
@@ -153,17 +153,9 @@ impl Model {
     /// # Safety
     /// `out_node_ids` must be a pointer to a buffer of at least
     /// `self.nodes.len()` `NodeId`s.
-    pub unsafe fn node_ids(&self, out_node_ids: *mut NodeId) -> usize {
-        let mut length = 0;
-        let mut ptr_walker = out_node_ids;
+    pub fn node_ids(&self) -> Vec<u32> {
 
-        for node_id in self.nodes.keys() {
-            *ptr_walker = *node_id;
-            ptr_walker = ptr_walker.add(1);
-            length += 1;
-        }
-
-        length
+        self.nodes.keys().copied().collect()
     }
     pub fn get_node(&self, id: u32) -> OptionPtr<Node> {
         option_to_ptr(self.nodes.get(&id))
@@ -189,20 +181,20 @@ impl Node {
             Node::Combinator { id, .. } => id,
         }
     }
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> String {
         match self {
-            Node::Population { name, .. } => &name,
-            Node::Combinator { name, .. } => &name,
-        }
+            Node::Population { ref name, .. } => name,
+            Node::Combinator { ref name, .. } => name,
+        }.to_string()
     }
-    pub fn related_constant_name(&self) -> &str {
+    pub fn related_constant_name(&self) -> String {
         match self {
             Node::Population {
                 related_constant_name,
                 ..
             } => &related_constant_name,
             Node::Combinator { .. } => "",
-        }
+        }.to_string()
     }
     pub fn operation(&self) -> OptionPtr<u32> {
         match self {

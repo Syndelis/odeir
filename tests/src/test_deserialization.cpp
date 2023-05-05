@@ -31,11 +31,8 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
     
     // REQUIRE( model.nodes().length() == 3 );
 
-    auto node_ids = new int[10];
-    int node_count = model.node_ids(node_ids);
-
-    std::vector node_ids_vec(node_ids, node_ids + node_count);
-    free(node_ids);
+    auto node_ids = model.node_ids();
+    std::vector<int> node_ids_vec(node_ids.cbegin(), node_ids.cend());
 
     REQUIRE( node_ids_vec.size() == 3 );
     REQUIRE_THAT( node_ids_vec, Catch::Matchers::UnorderedEquals(std::vector<int>{ 30, 2, 1 }));
@@ -46,8 +43,8 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
 
     REQUIRE( node1->tag() == NodeTag::Population );
     REQUIRE( node1->id() == 1 );
-    REQUIRE_THAT( node1->name().data(), Equals("Population 1") );
-    REQUIRE_THAT( node1->related_constant_name().data(), Equals("Population 1_0") );
+    REQUIRE_THAT( node1->name().c_str(), Equals("Population 1") );
+    REQUIRE_THAT( node1->related_constant_name().c_str(), Equals("Population 1_0") );
 
     // Node 2 ----------------------------------------------
 
@@ -57,8 +54,8 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
     REQUIRE( node2->id() == 2 );
 
     // TODO: This is being corrupted. Correctly starts with "Population 2", but ends with one or two garbage characters.
-    REQUIRE_THAT( node2->name().data(), Equals("Population 2") );
-    REQUIRE_THAT( node2->related_constant_name().data(), Equals("Population 2_0") );
+    REQUIRE_THAT( node2->name().c_str(), Equals("Population 2") );
+    REQUIRE_THAT( node2->related_constant_name().c_str(), Equals("Population 2_0") );
 
     // Node 30 ----------------------------------------------
 
@@ -66,7 +63,7 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
 
     REQUIRE( node30->tag() == NodeTag::Combinator );
     REQUIRE( node30->id() == 30 );
-    REQUIRE_THAT( node30->name().data(), Equals("Pop1 + Pop2") );
+    REQUIRE_THAT( node30->name().c_str(), Equals("Pop1 + Pop2") );
     // REQUIRE( node30.operation() == '+' );
 
     // REQUIRE( node30.inputs.length() == 2 );

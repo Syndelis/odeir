@@ -63,7 +63,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: cpp-test-build
-          path: tests/test
+          path: tests/
       
       - name: Run Valgrind Against Tests
         uses: solareenlo/42valgrind-action@v1.0.3

@@ -53,7 +53,6 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
     REQUIRE( node2->tag() == NodeTag::Population );
     REQUIRE( node2->id() == 2 );
 
-    // TODO: This is being corrupted. Correctly starts with "Population 2", but ends with one or two garbage characters.
     REQUIRE_THAT( node2->name().c_str(), Equals("Population 2") );
     REQUIRE_THAT( node2->related_constant_name().c_str(), Equals("Population 2_0") );
 
@@ -64,11 +63,13 @@ TEST_CASE( "a json should be deserializable into a CModel" ) {
     REQUIRE( node30->tag() == NodeTag::Combinator );
     REQUIRE( node30->id() == 30 );
     REQUIRE_THAT( node30->name().c_str(), Equals("Pop1 + Pop2") );
-    // REQUIRE( node30.operation() == '+' );
+    REQUIRE_THAT( (char *) node30->operation(), Equals("+") );
 
-    // REQUIRE( node30.inputs.length() == 2 );
-    // REQUIRE( node30.inputs[0] == 1 );
-    // REQUIRE( node30.inputs[1] == 2 );
+    auto inputs = node30->inputs();
+
+    REQUIRE( inputs.length() == 2 );
+    REQUIRE( inputs[0] == 1 );
+    REQUIRE( inputs[1] == 2 );
 
     // Constants ------------------------------------------
 

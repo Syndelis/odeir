@@ -1,5 +1,5 @@
-use std::collections::hash_map::Keys;
-use std::{ffi::c_char, iter::Copied};
+
+use std::ffi::c_char;
 
 use serde_json::Value;
 use std::collections::HashMap;
@@ -195,7 +195,7 @@ impl Node {
             Node::Population {
                 related_constant_name,
                 ..
-            } => &related_constant_name,
+            } => related_constant_name,
             Node::Combinator { .. } => "",
         }
         .to_string()
@@ -238,7 +238,7 @@ impl Link {
         self.sign as u32
     }
     pub fn node_id(&self) -> u32 {
-        self.node_id as u32
+        self.node_id
     }
 }
 

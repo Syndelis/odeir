@@ -5,7 +5,7 @@ use crate::Model;
 const ODE_TEMPLATE: &str = include_str!("../../templates/ode.txt");
 
 pub fn render_ode(model: Model) -> String {
-    let mut env = Environment::new();
+    let env = Environment::new();
 
     let mut ctx = context! {
         model => model,

@@ -55,9 +55,11 @@ jobs:
     needs: ffi_test
     steps:
       - name: Install valgrind
-        uses: taiki-e/cache-cargo-install-action@v1
+        uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          tool: valgrind
+          packages: valgrind
+          version: 1.0
+          execute_install_scripts: true
 
       - name: Download Cpp Test Build
         uses: actions/download-artifact@v3

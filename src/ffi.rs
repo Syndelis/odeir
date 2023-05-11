@@ -1,8 +1,8 @@
 use std::collections::hash_map::Keys;
 use std::{ffi::c_char, iter::Copied};
 
-use std::collections::HashMap;
 use serde_json::Value;
+use std::collections::HashMap;
 
 pub use crate::{Constant, Link, MetaData, Model, Node, NodeId};
 
@@ -157,7 +157,6 @@ impl Model {
     /// `out_node_ids` must be a pointer to a buffer of at least
     /// `self.nodes.len()` `NodeId`s.
     pub fn node_ids(&self) -> Vec<u32> {
-
         self.nodes.keys().copied().collect()
     }
     pub fn get_node(&self, id: u32) -> OptionPtr<Node> {
@@ -188,7 +187,8 @@ impl Node {
         match self {
             Node::Population { ref name, .. } => name,
             Node::Combinator { ref name, .. } => name,
-        }.to_string()
+        }
+        .to_string()
     }
     pub fn related_constant_name(&self) -> String {
         match self {
@@ -197,7 +197,8 @@ impl Node {
                 ..
             } => &related_constant_name,
             Node::Combinator { .. } => "",
-        }.to_string()
+        }
+        .to_string()
     }
     pub fn operation(&self) -> OptionPtr<u32> {
         match self {
@@ -263,7 +264,6 @@ pub fn model_into_json(model: Box<Model>) -> String {
 }
 
 pub unsafe fn _compare_jsons(json1: *const c_char, json2: *const c_char) -> bool {
-
     let json1 = unsafe { std::ffi::CStr::from_ptr(json1).to_bytes() };
     let json2 = unsafe { std::ffi::CStr::from_ptr(json2).to_bytes() };
 

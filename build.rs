@@ -10,8 +10,6 @@ fn main() {
     let target_dir = Path::new(&target_dir);
     let cxx_dir = target_dir.join("cxxbridge");
     let ffi_file = cxx_dir.join("odeir").join(FFI_SRC.to_string() + ".h");
-    let ffi_file = Path::new(&ffi_file);
-    let include_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("include");
 
     println!("cargo:rerun-if-changed={}", FFI_SRC);
 }

@@ -1,4 +1,3 @@
-
 use std::ffi::c_char;
 
 use serde_json::Value;
@@ -21,6 +20,7 @@ fn option_to_ptr(option: Option<&Node>) -> OptionPtr<Node> {
 }
 
 #[cxx::bridge]
+#[allow(clippy::module_inception)]
 mod ffi {
     enum NodeTag {
         Population,
@@ -128,6 +128,7 @@ impl Node {
 }
 
 impl Model {
+    #[allow(clippy::boxed_local)]
     pub fn add_node(&mut self, node: Box<Node>) {
         let node = *node;
         match node {
@@ -259,10 +260,13 @@ pub fn model_from_json(json: &[u8]) -> Box<Model> {
     Box::new(serde_json::from_slice(json).unwrap())
 }
 
+#[allow(clippy::boxed_local)]
 pub fn model_into_json(model: Box<Model>) -> String {
     serde_json::to_string(&*model).unwrap()
 }
 
+/// # Safety
+/// This function assumes that the pointers are valid C strings
 pub unsafe fn _compare_jsons(json1: *const c_char, json2: *const c_char) -> bool {
     let json1 = unsafe { std::ffi::CStr::from_ptr(json1).to_bytes() };
     let json2 = unsafe { std::ffi::CStr::from_ptr(json2).to_bytes() };

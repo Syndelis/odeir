@@ -1,4 +1,4 @@
-name: FFI Tests
+name: Unit Tests
 
 on:
   pull_request:
@@ -6,7 +6,29 @@ on:
       - '**'
 
 jobs:
-  test:
+  lib_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: "true"
+
+      - name: Use Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly
+      
+      - name: Run Tests
+        run: cargo +nightly test
+
+      - name: Upload Rust Build Cache
+        uses: actions/upload-artifact@v3
+        with:
+          name: rust-build-cache
+          path: target/
+
+  ffi_test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -19,8 +41,40 @@ jobs:
         with:
           toolchain: nightly
 
+      - name: Download Rust Build Cache
+        uses: actions/download-artifact@v3
+        with:
+          name: rust-build-cache
+
+      - name: Build Rust Staticlib in Debug Mode
+        run: cargo +nightly build
+
       - name: Build Tests
         run: make -C tests build
 
+      - name: Upload Cpp Test Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpp-test-build
+          path: tests/test
+
       - name: Run Tests
         run: make -C tests run
+
+  valgrind_mem_leak_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: "true"
+
+      - name: Download Cpp Test Build
+        uses: actions/download-artifact@v3
+        with:
+          name: cpp-test-build
+      
+      - name: Run Valgrind Against Tests
+        uses: solareenlo/42valgrind-action@v1.0.3
+        with:
+          flags: ./tests/test

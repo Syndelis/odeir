@@ -4,7 +4,7 @@
 
 using Catch::Matchers::Equals;
 
-TEST_CASE( "a json should be deserializable into a Model" ) {
+TEST_CASE( "a Model should be serializable into a JSON" ) {
 
     // Given - A model created from C++ code
 
@@ -36,5 +36,9 @@ TEST_CASE( "a json should be deserializable into a Model" ) {
     // Then - The resulting JSON should be valid
 
     REQUIRE( !model_json.empty() );
+
+    #include <fixtures/simple.h>
+
+    REQUIRE( _compare_jsons(model_json.c_str(), fixtures_simple_json) );
 
 }

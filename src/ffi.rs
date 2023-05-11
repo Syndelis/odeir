@@ -2,6 +2,7 @@ use std::collections::hash_map::Keys;
 use std::{ffi::c_char, iter::Copied};
 
 use std::collections::HashMap;
+use serde_json::Value;
 
 pub use crate::{Constant, Link, MetaData, Model, Node, NodeId};
 
@@ -26,6 +27,8 @@ mod ffi {
         Combinator,
     }
     extern "Rust" {
+        pub unsafe fn _compare_jsons(json1: *const c_char, json2: *const c_char) -> bool;
+
         type Constant;
         pub fn name(self: &Constant) -> &str;
         pub fn value(self: &Constant) -> f64;
@@ -257,4 +260,14 @@ pub fn model_from_json(json: &[u8]) -> Box<Model> {
 
 pub fn model_into_json(model: Box<Model>) -> String {
     serde_json::to_string(&*model).unwrap()
+}
+
+pub unsafe fn _compare_jsons(json1: *const c_char, json2: *const c_char) -> bool {
+
+    let json1 = unsafe { std::ffi::CStr::from_ptr(json1).to_bytes() };
+    let json2 = unsafe { std::ffi::CStr::from_ptr(json2).to_bytes() };
+
+    let json1: Value = serde_json::from_slice(json1).unwrap();
+    let json2: Value = serde_json::from_slice(json2).unwrap();
+    json1 == json2
 }

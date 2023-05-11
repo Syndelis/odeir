@@ -6,31 +6,8 @@ on:
       - '**'
 
 jobs:
-  lib_build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          submodules: "true"
-
-      - name: Use Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: nightly
-
-      - name: Build Rust Staticlib in Debug Mode
-        run: cargo +nightly build
-
-      - name: Upload Rust Build Cache
-        uses: actions/upload-artifact@v3
-        with:
-          name: rust-build-cache
-          path: target/
-
   lib_test:
     runs-on: ubuntu-latest
-    needs: lib_build
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -41,18 +18,12 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: nightly
-      
-      - name: Download Rust Build Cache
-        uses: actions/download-artifact@v3
-        with:
-          name: rust-build-cache
 
       - name: Run Tests
         run: cargo +nightly test
 
   ffi_test:
     runs-on: ubuntu-latest
-    needs: lib_build
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -64,10 +35,8 @@ jobs:
         with:
           toolchain: nightly
 
-      - name: Download Rust Build Cache
-        uses: actions/download-artifact@v3
-        with:
-          name: rust-build-cache
+      - name: Build Staticlib in Debug Mode
+        run: cargo +nightly build
 
       - name: Build Tests
         run: make -C tests build
@@ -94,6 +63,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: cpp-test-build
+          path: tests/test
       
       - name: Run Valgrind Against Tests
         uses: solareenlo/42valgrind-action@v1.0.3

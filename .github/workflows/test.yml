@@ -54,18 +54,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: ffi_test
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          submodules: "true"
-
       - name: Download Cpp Test Build
         uses: actions/download-artifact@v3
         with:
           name: cpp-test-build
-          path: tests/
+      
+      - name: Add Run Permissions to Test Program
+        run: chmod +x ./test
       
       - name: Run Valgrind Against Tests
         uses: solareenlo/42valgrind-action@v1.0.3
         with:
-          flags: ./tests/test
+          flags: ./test

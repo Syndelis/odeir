@@ -7,14 +7,14 @@ use serde::{Deserialize, Serialize};
 
 pub type NodeId = u32;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Model {
     pub meta_data: MetaData,
     pub nodes: HashMap<NodeId, Node>,
     pub constants: Vec<Constant>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct MetaData {
     start_time: f64,
     end_time: f64,
@@ -50,6 +50,10 @@ pub struct Constant {
     pub value: f64,
 }
 
+pub fn model_into_json(model: &Model) -> String {
+    serde_json::to_string(model).unwrap()
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -57,7 +61,6 @@ mod tests {
     use serde_json::Value;
 
     use super::*;
-    use crate::ffi::model_into_json;
 
     const SIMPLE_JSON: &str = include_str!("../tests/fixtures/simple.json");
 
@@ -213,7 +216,7 @@ mod tests {
 
         // When - We serialize the model into JSON
 
-        let model_json = model_into_json(Box::new(model));
+        let model_json = model_into_json(&model);
 
         // Then - The JSON is identical to simple.json
 

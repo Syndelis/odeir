@@ -2,7 +2,7 @@ CC=g++ -std=c++20
 CFLAGS=-g -fpermissive
 CFLAGS_LIBS=-c
 
-ODEIR_INCS=-I../target/cxxbridge/odeir/src/ -I../include/
+ODEIR_INCS=-I../include/ -I./include/
 ODEIR_LIB=../target/debug/libodeir.a
 
 CATCH2_PATH=lib/catch2
@@ -31,6 +31,9 @@ VPATH=src $(wildcard src/*) $(CATCH2_EXTRAS_PATH) $(ODEIR_LIB)
 
 run: build
 	./$(EXE)
+
+valgrind: build
+	valgrind --leak-check=full --show-leak-kinds=all --undef-value-errors=no --error-exitcode=1 ./$(EXE)
 
 build: $(EXE)
 

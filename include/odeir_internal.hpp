@@ -6,40 +6,35 @@
 #include <new>
 
 
+enum class NodeType : uint8_t {
+    Population,
+    Combinator,
+};
+
 struct Model;
 
 struct Node;
+
+using NodeId = uint32_t;
 
 using cchar = char;
 
 using cstr = const cchar*;
 
-using NodeId = uint32_t;
-
 struct Link {
     uint32_t sign;
     uint32_t node_id;
-};
-
-template<typename T>
-struct Option {
-    enum class Tag {
-        None,
-        Some,
-    };
-
-    struct Some_Body {
-        T _0;
-    };
-
-    Tag tag;
-    union {
-        Some_Body some;
-    };
+    bool operator==(const Link &other) const {
+        return sign == other.sign && node_id == other.node_id;
+    }
 };
 
 
 extern "C" {
+
+/// # Safety
+/// This function is unsafe because it derefences the node raw pointer.
+NodeId *odeir_combinator_take_inputs(Node *node, size_t *out_len, size_t *out_cap);
 
 /// # Safety
 /// This function is unsafe because it derefences the two strings.
@@ -56,6 +51,10 @@ cstr odeir_debug_string_model(Model *model);
 void odeir_free_cstr(cstr cstr);
 
 /// # Safety
+/// This function is unsafe because it derefences and frees a pointer.
+void odeir_free_link_vec(Link *vec, size_t len, size_t cap);
+
+/// # Safety
 /// This function is unsafe because it derefences the model raw pointer and
 /// frees it. Using the pointer after calling this function will result in
 /// undefined behavior.
@@ -66,6 +65,10 @@ void odeir_free_model(Model *model);
 /// frees it. Using the pointer after calling this function will result in
 /// undefined behavior.
 void odeir_free_node(Node *node);
+
+/// # Safety
+/// This function is unsafe because it derefences and frees a pointer.
+void odeir_free_node_id_vec(NodeId *vec, size_t len, size_t cap);
 
 /// # Safety
 /// This function is unsafe because it derefences both raw pointers for the
@@ -110,8 +113,13 @@ cstr odeir_model_to_json(Model *model);
 Model *odeir_new_model();
 
 /// # Safety
+/// This function is unsafe because it derefences the node raw pointer and the
+/// out_type pointer.
+cstr odeir_node_get_info(Node *node, NodeType *out_type);
+
+/// # Safety
 /// This function is unsafe because it derefences the node raw pointer.
-Option<Link> odeir_population_take_next_link(Node *node);
+Link *odeir_population_take_links(Node *node, size_t *out_len, size_t *out_cap);
 
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer.

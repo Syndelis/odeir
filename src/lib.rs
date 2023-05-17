@@ -41,7 +41,7 @@ pub enum Node {
 }
 
 #[repr(C)]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Link {
     pub sign: char,
     pub node_id: u32,

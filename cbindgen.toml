@@ -70,6 +70,11 @@ renaming_overrides_prefixing = false
 
 
 [export.body]
+"Link" = """
+    bool operator==(const Link &other) const {
+        return sign == other.sign && node_id == other.node_id;
+    }
+"""
 
 
 [export.mangle]

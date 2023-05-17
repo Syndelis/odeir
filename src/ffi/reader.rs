@@ -2,6 +2,12 @@ use crate::{Model, NodeId, Node, Link};
 
 use super::utils::{self, cstr};
 
+#[repr(u8)]
+pub enum NodeType {
+    Population,
+    Combinator,
+}
+
 /// # Safety
 /// This function is unsafe because it derefences the string pointer.
 /// This function may return a null pointer if the JSON is invalid.
@@ -60,15 +66,63 @@ pub unsafe extern "C" fn odeir_model_take_node(
 /// # Safety
 /// This function is unsafe because it derefences the node raw pointer.
 #[no_mangle]
-pub unsafe extern "C" fn odeir_population_take_next_link(node: *mut Node) -> utils::Option<Link> {
+pub unsafe extern "C" fn odeir_population_take_links(
+    node: *mut Node, out_len: *mut usize, out_cap: *mut usize 
+) -> *mut Link {
     let node = unsafe { &mut *node };
 
     if let Node::Population { ref mut links, .. } = node {
-        match links.pop() {
-            Some(link) => utils::Option::Some(link),
-            None => utils::Option::None,
+        let (ptr, len, cap) = links.clone().into_raw_parts();
+
+        unsafe {
+            *out_len = len;
+            *out_cap = cap;
         }
+
+        ptr
     } else {
         panic!("Node is not a population");
+    }
+}
+
+/// # Safety
+/// This function is unsafe because it derefences the node raw pointer.
+#[no_mangle]
+pub unsafe extern "C" fn odeir_combinator_take_inputs(
+    node: *mut Node, out_len: *mut usize, out_cap: *mut usize
+) -> *mut NodeId
+{
+    let node = unsafe { &mut *node };
+
+    if let Node::Combinator { ref mut inputs, .. } = node {
+        let (ptr, len, cap) = inputs.clone().into_raw_parts();
+
+        unsafe {
+            *out_len = len;
+            *out_cap = cap;
+        }
+
+        ptr
+    } else {
+        panic!("Node is not a combinator");
+    }
+}
+
+/// # Safety
+/// This function is unsafe because it derefences the node raw pointer and the
+/// out_type pointer.
+#[no_mangle]
+pub unsafe extern "C" fn odeir_node_get_info(node: *mut Node, out_type: *mut NodeType) -> cstr {
+    let node = unsafe { &mut *node };
+
+    match node {
+        Node::Population { name, .. } => {
+            *out_type = NodeType::Population;
+            utils::string_to_cstr(name.clone())
+        },
+        Node::Combinator { name, .. } => {
+            *out_type = NodeType::Combinator;
+            utils::string_to_cstr(name.clone())
+        }
     }
 }

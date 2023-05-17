@@ -6,6 +6,12 @@ pub(crate) type cchar = c_char;
 #[allow(non_camel_case_types)]
 pub(crate) type cstr = *const cchar;
 
+#[repr(C)]
+pub enum Option<T: Sized> {
+    None,
+    Some(T),
+}
+
 /// # Safety
 /// This function is unsafe because it dereferences a raw pointer.
 /// The caller must ensure that the pointer is valid.

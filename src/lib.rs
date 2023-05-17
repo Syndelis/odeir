@@ -1,3 +1,5 @@
+#![feature(vec_into_raw_parts)]
+
 pub mod ffi;
 pub mod transformations;
 
@@ -38,6 +40,7 @@ pub enum Node {
     },
 }
 
+#[repr(C)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Link {
     pub sign: char,

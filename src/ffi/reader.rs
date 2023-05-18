@@ -49,16 +49,16 @@ pub unsafe extern "C" fn odeir_model_get_node_ids(
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer.
 #[no_mangle]
-pub unsafe extern "C" fn odeir_model_take_node(
+pub unsafe extern "C" fn odeir_model_get_node(
     model: *mut Model, node_id: NodeId
 ) -> *mut Node
 {
     let model = unsafe { &mut *model };
 
-    let node = model.nodes.remove(&node_id);
+    let node = model.nodes.get_mut(&node_id);
 
     match node {
-        Some(node) => Box::leak(Box::new(node)),
+        Some(node_ref) => node_ref,
         None => std::ptr::null_mut(),
     }
 }

@@ -16,7 +16,8 @@ pub extern "C" fn odeir_new_model() -> *mut Model {
 #[no_mangle]
 pub unsafe extern "C" fn odeir_insert_population(
     model: *mut Model, id: NodeId, name: cstr, related_constant_name: cstr
-) {
+) -> *mut Node
+{
     let name = utils::cstr_cloned_into_string(name);
     let related_constant_name = utils::cstr_cloned_into_string(related_constant_name);
 
@@ -30,26 +31,30 @@ pub unsafe extern "C" fn odeir_insert_population(
     let model = unsafe { &mut *model };
 
     model.nodes.insert(id, node);
+
+    model.nodes.get_mut(&id).unwrap()
 }
 
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer.
 #[no_mangle]
 pub unsafe extern "C" fn odeir_insert_population_link(
-    model: *mut Model, node_id: NodeId, sign: cchar, target_node_id: NodeId
+    node: *mut Node, sign: cchar, target_node_id: NodeId
 ) {
     let link = Link {
         sign: sign as u8 as char,
         node_id: target_node_id,
     };
+    
+    let node = unsafe { &mut *node };
 
-    let model = unsafe { &mut *model };
-
-    match model.nodes.get_mut(&node_id) {
-        Some(Node::Population { links, .. }) => {
+    match node {
+        Node::Population { links, .. } => {
             links.push(link);
         },
-        _ => panic!("Population with id {} not found", node_id),
+        Node::Combinator { id, .. } => {
+            panic!("Tried to call a population method with a non-population node {}", id)
+        },
     }
 }
 
@@ -59,7 +64,8 @@ pub unsafe extern "C" fn odeir_insert_population_link(
 #[no_mangle]
 pub unsafe extern "C" fn odeir_insert_combinator(
     model: *mut Model, node_id: NodeId, name: cstr, operation: cchar
-) {
+) -> *mut Node
+{
 
     let name = utils::cstr_cloned_into_string(name);
 
@@ -74,21 +80,25 @@ pub unsafe extern "C" fn odeir_insert_combinator(
 
     model.nodes.insert(node_id, node);
 
+    model.nodes.get_mut(&node_id).unwrap()
+
 }
 
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer.
 #[no_mangle]
 pub unsafe extern "C" fn odeir_insert_combinator_input(
-    model: *mut Model, node_id: NodeId, input_node_id: NodeId
+    node: *mut Node, input_node_id: NodeId
 ) {
-    let model = unsafe { &mut *model };
+    let node = unsafe { &mut *node };
 
-    match model.nodes.get_mut(&node_id) {
-        Some(Node::Combinator { inputs, .. }) => {
+    match node {
+        Node::Population { id, .. } => {
+            panic!("Tried to call a combinator method with a non-combinator node {}", id)
+        },
+        Node::Combinator { inputs, .. } => {
             inputs.push(input_node_id);
         },
-        _ => panic!("Combinator with id {} not found", node_id),
     }
 }
 

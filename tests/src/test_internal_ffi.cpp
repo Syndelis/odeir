@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+using namespace internal_api;
+
 TEST_CASE( "A model can be serialized using the raw C API" ) {
 
     // Given - We've built a model from the ground up using the C API
@@ -16,15 +18,15 @@ TEST_CASE( "A model can be serialized using the raw C API" ) {
     odeir_insert_const(model, "Population 2_0", 200.0);
     odeir_insert_const(model, "a", 1.6);
 
-    odeir_insert_population(model, 1, "Population 1", "Population 1_0");
-    odeir_insert_population_link(model, 1, '+', 30);
+    auto pop1 = odeir_insert_population(model, 1, "Population 1", "Population 1_0");
+    odeir_insert_population_link(pop1, '+', 30);
 
-    odeir_insert_population(model, 2, "Population 2", "Population 2_0");
-    odeir_insert_population_link(model, 2, '-', 30);
+    auto pop2 = odeir_insert_population(model, 2, "Population 2", "Population 2_0");
+    odeir_insert_population_link(pop2, '-', 30);
 
-    odeir_insert_combinator(model, 30, "Pop1 + Pop2", '+');
-    odeir_insert_combinator_input(model, 30, 1);
-    odeir_insert_combinator_input(model, 30, 2);
+    auto comb30 = odeir_insert_combinator(model, 30, "Pop1 + Pop2", '+');
+    odeir_insert_combinator_input(comb30, 1);
+    odeir_insert_combinator_input(comb30, 2);
 
     // When - I serialize the model into a JSON
 
@@ -79,7 +81,7 @@ TEST_CASE( "A JSON can be deserialized using the raw C API" ) {
 
     // Node 1 ------------------------------------------------------------------
 
-    auto node = odeir_model_take_node(model, 1);
+    auto node = odeir_model_get_node(model, 1);
 
     REQUIRE ( node != nullptr );
 
@@ -102,11 +104,9 @@ TEST_CASE( "A JSON can be deserialized using the raw C API" ) {
 
     odeir_free_cstr(node_name);
 
-    odeir_free_node(node);
-
     // Node 2 ------------------------------------------------------------------
 
-    node = odeir_model_take_node(model, 2);
+    node = odeir_model_get_node(model, 2);
 
     REQUIRE ( node != nullptr );
 
@@ -128,11 +128,9 @@ TEST_CASE( "A JSON can be deserialized using the raw C API" ) {
 
     odeir_free_cstr(node_name);
 
-    odeir_free_node(node);
-
     // Node 30 -----------------------------------------------------------------
 
-    node = odeir_model_take_node(model, 30);
+    node = odeir_model_get_node(model, 30);
 
     REQUIRE ( node != nullptr );
 
@@ -153,8 +151,6 @@ TEST_CASE( "A JSON can be deserialized using the raw C API" ) {
     odeir_free_node_id_vec(node_inputs, len, cap);
 
     odeir_free_cstr(node_name);
-
-    odeir_free_node(node);
 
     // Constants ---------------------------------------------------------------
 

@@ -1,3 +1,6 @@
+#ifndef ODEIR_INTERNAL_HPP
+#define ODEIR_INTERNAL_HPP
+
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
@@ -5,6 +8,8 @@
 #include <ostream>
 #include <new>
 
+
+namespace internal_api {
 
 enum class NodeType : uint8_t {
     Population,
@@ -73,11 +78,11 @@ void odeir_free_node_id_vec(NodeId *vec, size_t len, size_t cap);
 /// # Safety
 /// This function is unsafe because it derefences both raw pointers for the
 /// model and the name. The caller must ensure that the pointers are valid.
-void odeir_insert_combinator(Model *model, NodeId node_id, cstr name, cchar operation);
+Node *odeir_insert_combinator(Model *model, NodeId node_id, cstr name, cchar operation);
 
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer.
-void odeir_insert_combinator_input(Model *model, NodeId node_id, NodeId input_node_id);
+void odeir_insert_combinator_input(Node *node, NodeId input_node_id);
 
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer.
@@ -86,11 +91,11 @@ void odeir_insert_const(Model *model, cstr name, double value);
 /// # Safety
 /// This function is unsafe because it derefences both raw pointers for the
 /// model and the name. The caller must ensure that the pointers are valid.
-void odeir_insert_population(Model *model, NodeId id, cstr name, cstr related_constant_name);
+Node *odeir_insert_population(Model *model, NodeId id, cstr name, cstr related_constant_name);
 
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer.
-void odeir_insert_population_link(Model *model, NodeId node_id, cchar sign, NodeId target_node_id);
+void odeir_insert_population_link(Node *node, cchar sign, NodeId target_node_id);
 
 /// # Safety
 /// This function is unsafe because it derefences the string pointer.
@@ -98,13 +103,13 @@ void odeir_insert_population_link(Model *model, NodeId node_id, cchar sign, Node
 Model *odeir_json_to_model(cstr json);
 
 /// # Safety
+/// This function is unsafe because it derefences the model raw pointer.
+Node *odeir_model_get_node(Model *model, NodeId node_id);
+
+/// # Safety
 /// This function is unsafe because it derefences the model raw pointer and also
 /// writes to both `out_len` and `out_cap` pointers.
 NodeId *odeir_model_get_node_ids(Model *model, size_t *out_len, size_t *out_cap);
-
-/// # Safety
-/// This function is unsafe because it derefences the model raw pointer.
-Node *odeir_model_take_node(Model *model, NodeId node_id);
 
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer.
@@ -126,3 +131,7 @@ Link *odeir_population_take_links(Node *node, size_t *out_len, size_t *out_cap);
 void odeir_set_metadata(Model *model, double start_time, double end_time, double delta_time);
 
 } // extern "C"
+
+} // namespace internal_api
+
+#endif // ODEIR_INTERNAL_HPP

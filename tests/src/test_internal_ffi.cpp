@@ -11,7 +11,7 @@ TEST_CASE( "A model can be serialized using the raw C API" ) {
 
     auto model = odeir_new_model();
 
-    odeir_set_metadata(model, 0.0, 10.5, 0.1);
+    odeir_set_metadata(model, 0.0, 10.5, 0.125);
 
     odeir_insert_const(model, "gravity", 9.81);
     odeir_insert_const(model, "Population 1_0", 100.0);

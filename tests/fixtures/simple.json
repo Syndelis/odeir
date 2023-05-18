@@ -2,7 +2,7 @@
     "meta_data": {
         "start_time": 0.0,
         "end_time": 10.50,
-        "delta_time": 0.1
+        "delta_time": 0.125
     },
     "nodes": {
         "1": {

@@ -16,6 +16,8 @@ enum class NodeType : uint8_t {
     Combinator,
 };
 
+struct Link;
+
 struct Model;
 
 struct Node;
@@ -25,14 +27,6 @@ using NodeId = uint32_t;
 using cchar = char;
 
 using cstr = const cchar*;
-
-struct Link {
-    uint32_t sign;
-    uint32_t node_id;
-    bool operator==(const Link &other) const {
-        return sign == other.sign && node_id == other.node_id;
-    }
-};
 
 
 extern "C" {

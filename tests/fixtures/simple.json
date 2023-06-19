@@ -8,7 +8,7 @@
         "1": {
             "id": 1,
             "name": "Population 1",
-            "related_constant_name": "Population 1_0",
+            "initial_population": 100.0,
             "links": [
                 {
                     "sign": "+",
@@ -19,7 +19,7 @@
         "2": {
             "id": 2,
             "name": "Population 2",
-            "related_constant_name": "Population 2_0",
+            "initial_population": 200.0,
             "links": [
                 {
                     "sign": "-",
@@ -31,7 +31,7 @@
             "id": 30,
             "name": "Pop1 + Pop2",
             "operation": "+",
-            "inputs": [
+            "links": [
                 1,
                 2
             ]

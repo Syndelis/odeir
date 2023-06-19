@@ -9,11 +9,25 @@ use serde::{Deserialize, Serialize};
 
 pub type NodeId = u32;
 
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+enum LinkType {
+    #[default]
+    Normal,
+    Negative,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct Link {
+    incoming: NodeId,
+    ongoing: NodeId,
+    link_type: LinkType,
+}
+
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Model {
     pub meta_data: MetaData,
     pub nodes: HashMap<NodeId, Node>,
-    pub constants: Vec<Constant>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -26,25 +40,74 @@ pub struct MetaData {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum Node {
+    Constant {
+        id: NodeId,
+        name: String,
+
+        outputs: Vec<Link>,
+        value: f64,
+    },
     Population {
         id: NodeId,
         name: String,
-        related_constant_name: String,
-        links: Vec<Link>,
+
+        outputs: Vec<Link>,
+        initial_population: f64,
     },
     Combinator {
         id: NodeId,
         name: String,
-        operation: char,
-        inputs: Vec<NodeId>,
+
+        outputs: Vec<Link>,
+        inputs: Vec<Link>,
+        operation: Operation,
     },
 }
 
-#[repr(C)]
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-pub struct Link {
-    pub sign: char,
-    pub node_id: u32,
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum Operation {
+    #[default]
+    Add,
+    Sub,
+    Div,
+    Mul,
+}
+
+impl Operation {
+    pub fn to_char(&self) -> char {
+        match self {
+            Self::Add => '+',
+            Self::Sub => '-',
+            Self::Div => '/',
+            Self::Mul => '*',
+        }
+    }
+    pub fn from_char(c: char) -> Option<Self> {
+        match c {
+            '+' => Some(Self::Add),
+            '-' => Some(Self::Sub),
+            '/' => Some(Self::Div),
+            '*' => Some(Self::Mul),
+            _ => None,
+        }
+    }
+}
+
+use serde::de::Error;
+impl<'de> serde::Deserialize<'de> for Operation {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de> {
+        Self::from_char(char::deserialize(deserializer)?).ok_or_else(|| <D::Error>::custom("Expected either +, -, / or *"))
+    }
+}
+
+impl serde::Serialize for Operation {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        Self::to_char(self).serialize(serializer)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -94,18 +157,18 @@ mod tests {
         if let Node::Population {
             id,
             name,
-            related_constant_name,
             links,
+        // !TODO: match this
+            initial_population
         } = pop_1
         {
             assert_eq!(*id, 1);
             assert_eq!(name.as_str(), "Population 1");
-            assert_eq!(related_constant_name.as_str(), "Population 1_0");
             assert_eq!(links.len(), 1);
 
             let link = &links[0];
 
-            assert_eq!(link.sign, '+');
+            assert_eq!(link.link_type,  LinkType::Normal);
             assert_eq!(link.node_id, 30);
         } else {
             panic!("Expected Node::Population for id 1");
@@ -116,18 +179,18 @@ mod tests {
         if let Node::Population {
             id,
             name,
-            related_constant_name,
             links,
+        // !TODO: match this
+            initial_population
         } = pop_2
         {
             assert_eq!(*id, 2);
             assert_eq!(name.as_str(), "Population 2");
-            assert_eq!(related_constant_name.as_str(), "Population 2_0");
             assert_eq!(links.len(), 1);
 
             let link = &links[0];
 
-            assert_eq!(link.sign, '-');
+            assert_eq!(link.link_type,  LinkType::Negative);
             assert_eq!(link.node_id, 30);
         } else {
             panic!("Expected Node::Population for id 2");
@@ -139,15 +202,15 @@ mod tests {
             id,
             name,
             operation,
-            inputs,
+            links
         } = comb_30
         {
             assert_eq!(*id, 30);
             assert_eq!(name.as_str(), "Pop1 + Pop2");
-            assert_eq!(*operation, '+');
-            assert_eq!(inputs.len(), 2);
-            assert_eq!(inputs[0], 1);
-            assert_eq!(inputs[1], 2);
+            assert_eq!(*operation, Operation::Add);
+            assert_eq!(links.len(), 2);
+            assert_eq!(links[0], 1);
+            assert_eq!(links[1], 2);
         } else {
             panic!("Expected Node::Combinator for id 30");
         }
@@ -160,9 +223,8 @@ mod tests {
         let node1 = Node::Population {
             id: 1,
             name: "Population 1".into(),
-            related_constant_name: "Population 1_0".into(),
             links: vec![Link {
-                sign: '+',
+                operation: Operation::Add,
                 node_id: 30,
             }],
         };
@@ -170,9 +232,8 @@ mod tests {
         let node2 = Node::Population {
             id: 2,
             name: "Population 2".into(),
-            related_constant_name: "Population 2_0".into(),
             links: vec![Link {
-                sign: '-',
+                operation: Operation::Sub,
                 node_id: 30,
             }],
         };
@@ -180,8 +241,8 @@ mod tests {
         let node30 = Node::Combinator {
             id: 30,
             name: "Pop1 + Pop2".into(),
-            operation: '+',
-            inputs: vec![1, 2],
+            operation: Operation::Add,
+            links: vec![1, 2],
         };
 
         let mut nodes = HashMap::new();

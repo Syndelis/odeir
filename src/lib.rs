@@ -195,7 +195,7 @@ mod tests {
             meta_data: MetaData {
                 start_time: 0.0,
                 end_time: 10.5,
-                delta_time: 0.1,
+                delta_time: 0.125,
             },
             constants: vec![
                 Constant {

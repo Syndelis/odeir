@@ -4,55 +4,37 @@
         "end_time": 10.50,
         "delta_time": 0.125
     },
-    "nodes": {
-        "1": {
+    "nodes": [
+        {
             "id": 1,
             "name": "Population 1",
             "initial_population": 100.0,
-            "links": [
-                {
-                    "sign": "+",
-                    "node_id": 30
-                }
+            "outputs": [
+                {"receiver_id": 30, "link_type": "+"},
             ]
         },
-        "2": {
+        {
             "id": 2,
             "name": "Population 2",
             "initial_population": 200.0,
-            "links": [
-                {
-                    "sign": "-",
-                    "node_id": 30
-                }
+            "outputs": [
+                {"receiver_id": 2, "link_type": "-"
             ]
         },
-        "30": {
-            "id": 30,
-            "name": "Pop1 + Pop2",
-            "operation": "+",
-            "links": [
-                1,
-                2
-            ]
-        }
-    },
-    "constants": [
         {
+            "id": 4,
             "name": "gravity",
             "value": 9.81
         },
         {
-            "name": "Population 1_0",
-            "value": 100.0
-        },
-        {
-            "name": "Population 2_0",
-            "value": 200.0
-        },
-        {
+            "id": 5,
             "name": "a",
             "value": 1.6
+        },
+        {
+            "id": 30,
+            "name": "Pop1 + Pop2",
+            "operation": "+"
         }
     ]
 }

@@ -13,20 +13,18 @@ TEST_CASE( "A model can be serialized using the raw C API" ) {
 
     odeir_set_metadata(model, 0.0, 10.5, 0.125);
 
-    odeir_insert_const(model, "gravity", 9.81);
-    odeir_insert_const(model, "Population 1_0", 100.0);
-    odeir_insert_const(model, "Population 2_0", 200.0);
-    odeir_insert_const(model, "a", 1.6);
+    odeir_insert_const(model, 10, "gravity", 9.81);
+    odeir_insert_const(model, 13, "a", 1.6);
 
-    auto pop1 = odeir_insert_population(model, 1, "Population 1", "Population 1_0");
-    odeir_insert_population_link(pop1, '+', 30);
+    auto pop1 = odeir_insert_population(model, 1, "Population 1", 100);
+    odeir_node_insert_output(pop1, internal_api::LinkType::Normal, 30);
 
-    auto pop2 = odeir_insert_population(model, 2, "Population 2", "Population 2_0");
-    odeir_insert_population_link(pop2, '-', 30);
+    auto pop2 = odeir_insert_population(model, 2, "Population 2", 200);
+    odeir_node_insert_output(pop2, internal_api::LinkType::Negative, 30);
 
-    auto comb30 = odeir_insert_combinator(model, 30, "Pop1 + Pop2", '+');
-    odeir_insert_combinator_input(comb30, 1);
-    odeir_insert_combinator_input(comb30, 2);
+    auto comb30 = odeir_insert_combinator(model, 30, "Pop1 + Pop2", internal_api::Operation::Add);
+    odeir_combinator_insert_input(comb30, internal_api::LinkType::Normal, 1);
+    odeir_combinator_insert_input(comb30, internal_api::LinkType::Negative, 2);
 
     // When - I serialize the model into a JSON
 
@@ -91,7 +89,8 @@ TEST_CASE( "A JSON can be deserialized using the raw C API" ) {
     REQUIRE ( node_type == NodeType::Population );
     REQUIRE_THAT ( node_name, Catch::Matchers::Equals("Population 1") );
 
-    auto node_links = odeir_population_take_links(node, &len, &cap);
+    auto node_links = odeir_node_outputs(node);
+    len = odeir_node_outputs_len(node);
 
     std::vector node_1_links(node_links, node_links + len);
 
@@ -115,7 +114,8 @@ TEST_CASE( "A JSON can be deserialized using the raw C API" ) {
     REQUIRE ( node_type == NodeType::Population );
     REQUIRE_THAT ( node_name, Catch::Matchers::Equals("Population 2") );
 
-    node_links = odeir_population_take_links(node, &len, &cap);
+    node_links = odeir_node_outputs(node);
+    len = odeir_node_outputs_len(node);
 
     std::vector node_2_links(node_links, node_links + len);
 
@@ -139,7 +139,7 @@ TEST_CASE( "A JSON can be deserialized using the raw C API" ) {
     REQUIRE ( node_type == NodeType::Combinator );
     REQUIRE_THAT ( node_name, Catch::Matchers::Equals("Pop1 + Pop2") );
 
-    auto node_inputs = odeir_combinator_take_inputs(node, &len, &cap);
+    auto node_inputs = odeir_combinator_inputs(node);
 
     std::vector node_30_inputs(node_inputs, node_inputs + len);
 

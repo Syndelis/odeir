@@ -3,6 +3,7 @@
 #include <catch_amalgamated.hpp>
 
 using Catch::Matchers::Equals;
+using namespace odeir;
 
 TEST_CASE( "a Model should be serializable into a JSON" ) {
 
@@ -11,19 +12,19 @@ TEST_CASE( "a Model should be serializable into a JSON" ) {
     Model model = ModelBuilder<InitialState>()
         .setMetadata(0, 10.5, 0.125)
         .buildNode(1, "Population 1")
-            .withRelatedConstant("Population 1_0")
-            .addLink(30, '+')
+            .withInitialPopulation(100)
+            .addLink(30, LinkType::Normal)
         .buildNode(2, "Population 2")
-            .withRelatedConstant("Population 2_0")
-            .addLink(30, '-')
+            .withInitialPopulation(200)
+            .addLink(30, LinkType::Negative)
         .buildNode(30, "Pop1 + Pop2")
             .withOperation('+')
             .addInput(1)
             .addInput(2)
-        .addConstant("gravity", 9.81)
-        .addConstant("Population 1_0", 100)
-        .addConstant("Population 2_0", 200)
-        .addConstant("a", 1.6);
+        .buildNode(3, "gravity")
+            .withConstant(9.81)
+        .buildNode(4, "a")
+            .withConstant(1.6);
 
     // When - The model is serialized into a json
     

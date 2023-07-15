@@ -1,5 +1,4 @@
 #![feature(vec_into_raw_parts)]
-
 pub mod ffi;
 pub mod transformations;
 
@@ -9,36 +8,63 @@ use serde::{Deserialize, Serialize};
 
 pub type NodeId = u32;
 
+mod json;
+
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[serde(try_from = "char")]
+#[serde(into = "char")]
 #[repr(u8)]
-enum LinkType {
+pub enum LinkType {
     #[default]
     Normal,
     Negative,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct Link {
-    incoming: NodeId,
-    ongoing: NodeId,
-    link_type: LinkType,
+impl Into<char> for LinkType {
+    fn into(self) -> char {
+        match self {
+            Self::Normal => '+',
+            Self::Negative => '-',
+        }
+    }
+}
+impl TryFrom<char> for LinkType {
+    type Error = String;
+    fn try_from(c: char) -> Result<Self, Self::Error> {
+        Ok(match c {
+            '+' => Self::Normal,
+            '-' => Self::Negative,
+            _ => return Err(format!("Expected either + or -"))
+        })
+    }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct Link {
+    pub receiver: NodeId,
+    pub sender: NodeId,
+    pub link_type: LinkType,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[serde(from = "json::JsonModel")]
+#[serde(into = "json::JsonModel")]
 pub struct Model {
     pub meta_data: MetaData,
+    pub links: Vec<Link>,
     pub nodes: HashMap<NodeId, Node>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct MetaData {
     start_time: f64,
     end_time: f64,
     delta_time: f64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Node {
     Constant {
         id: NodeId,
@@ -64,7 +90,34 @@ pub enum Node {
     },
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+impl Node {
+    fn name(&self) -> &str {
+        match self {
+            Self::Constant { name, .. } => name,
+            Self::Population { name, .. } => name,
+            Self::Combinator { name, .. } => name,
+        }
+    }
+    fn id(&self) -> NodeId {
+        match self {
+            Self::Constant { id, .. } => *id,
+            Self::Population { id, .. } => *id,
+            Self::Combinator { id, .. } => *id,
+        }
+    }
+    fn outputs(&mut self) -> &mut Vec<Link> {
+        match self {
+            Self::Constant { outputs, .. } => outputs,
+            Self::Population { outputs, .. } => outputs,
+            Self::Combinator { outputs, .. } => outputs,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[serde(try_from = "char")]
+#[serde(into = "char")]
+#[repr(u8)]
 pub enum Operation {
     #[default]
     Add,
@@ -73,8 +126,8 @@ pub enum Operation {
     Mul,
 }
 
-impl Operation {
-    pub fn to_char(&self) -> char {
+impl Into<char> for Operation {
+    fn into(self) -> char {
         match self {
             Self::Add => '+',
             Self::Sub => '-',
@@ -82,38 +135,18 @@ impl Operation {
             Self::Mul => '*',
         }
     }
-    pub fn from_char(c: char) -> Option<Self> {
+}
+impl TryFrom<char> for Operation {
+    type Error = String;
+    fn try_from(c: char) -> Result<Self, Self::Error> {
         match c {
-            '+' => Some(Self::Add),
-            '-' => Some(Self::Sub),
-            '/' => Some(Self::Div),
-            '*' => Some(Self::Mul),
-            _ => None,
+            '+' => Ok(Self::Add),
+            '-' => Ok(Self::Sub),
+            '/' => Ok(Self::Div),
+            '*' => Ok(Self::Mul),
+            _ => Err(format!("Expected either '+', '-', '/', or '*'")),
         }
     }
-}
-
-use serde::de::Error;
-impl<'de> serde::Deserialize<'de> for Operation {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: serde::Deserializer<'de> {
-        Self::from_char(char::deserialize(deserializer)?).ok_or_else(|| <D::Error>::custom("Expected either +, -, / or *"))
-    }
-}
-
-impl serde::Serialize for Operation {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer {
-        Self::to_char(self).serialize(serializer)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Constant {
-    pub name: String,
-    pub value: f64,
 }
 
 pub fn model_into_json(model: &Model) -> String {
@@ -133,8 +166,7 @@ mod tests {
     #[test]
     fn simple_is_de() {
         // Given - A JSON representing a model with:
-        // - 3 Nodes: 2 Populations and 1 Combinator
-        // - 4 Constants
+        // - 7 Nodes: 2 Populations, 1 Combinator and 4 Constants
 
         // SIMPLE_JSON is included above
 
@@ -142,34 +174,30 @@ mod tests {
 
         let model = serde_json::from_str::<Model>(SIMPLE_JSON);
 
-        assert!(model.is_ok());
-
         let model = model.unwrap();
 
         // Then - The correct data is loaded up
 
-        assert_eq!(model.nodes.len(), 3);
-
-        assert_eq!(model.constants.len(), 4);
+        assert_eq!(model.nodes.len(), 5);
 
         let pop_1 = model.nodes.get(&1).unwrap();
 
         if let Node::Population {
             id,
             name,
-            links,
-        // !TODO: match this
+            outputs,
             initial_population
         } = pop_1
         {
             assert_eq!(*id, 1);
             assert_eq!(name.as_str(), "Population 1");
-            assert_eq!(links.len(), 1);
+            assert_eq!(outputs.len(), 1);
+            assert_eq!(*initial_population, 100.0);
 
-            let link = &links[0];
+            let link = &outputs[0];
 
             assert_eq!(link.link_type,  LinkType::Normal);
-            assert_eq!(link.node_id, 30);
+            assert_eq!(link.receiver, 30);
         } else {
             panic!("Expected Node::Population for id 1");
         }
@@ -179,19 +207,19 @@ mod tests {
         if let Node::Population {
             id,
             name,
-            links,
-        // !TODO: match this
+            outputs,
             initial_population
         } = pop_2
         {
             assert_eq!(*id, 2);
             assert_eq!(name.as_str(), "Population 2");
-            assert_eq!(links.len(), 1);
+            assert_eq!(outputs.len(), 1);
+            assert_eq!(*initial_population, 200.0);
 
-            let link = &links[0];
+            let link = &outputs[0];
 
             assert_eq!(link.link_type,  LinkType::Negative);
-            assert_eq!(link.node_id, 30);
+            assert_eq!(link.receiver, 30);
         } else {
             panic!("Expected Node::Population for id 2");
         }
@@ -202,17 +230,50 @@ mod tests {
             id,
             name,
             operation,
-            links
+            inputs,
+            outputs,
         } = comb_30
         {
             assert_eq!(*id, 30);
             assert_eq!(name.as_str(), "Pop1 + Pop2");
             assert_eq!(*operation, Operation::Add);
-            assert_eq!(links.len(), 2);
-            assert_eq!(links[0], 1);
-            assert_eq!(links[1], 2);
+            assert_eq!(inputs.len(), 2);
+
+            // Order matters here. Be careful.
+            assert_eq!(inputs[0].sender, 1);
+            assert_eq!(inputs[0].receiver, 30);
+            assert_eq!(inputs[1].sender, 2);
+            assert_eq!(inputs[1].receiver, 30);
         } else {
             panic!("Expected Node::Combinator for id 30");
+        }
+
+        let gravity = model.nodes.get(&4).unwrap();
+        if let Node::Constant {
+            id,
+            name,
+            value,
+            outputs
+        } = gravity
+        {
+            assert_eq!(*id, 4);
+            assert_eq!(name.as_str(), "gravity");
+            assert_eq!(*value, 9.81);
+            assert_eq!(outputs.len(), 0);
+        }
+
+        let a = model.nodes.get(&5).unwrap();
+        if let Node::Constant {
+            id,
+            name,
+            value,
+            outputs
+        } = a
+        {
+            assert_eq!(*id, 5);
+            assert_eq!(name.as_str(), "a");
+            assert_eq!(*value, 1.6);
+            assert_eq!(outputs.len(), 0);
         }
     }
 
@@ -220,62 +281,70 @@ mod tests {
     fn simple_is_ser() {
         // Given - We've recreated Simple's model in Rust
 
+        let link1_30 = Link {
+                link_type: LinkType::Normal,
+                receiver: 30,
+                sender: 1,
+            };
         let node1 = Node::Population {
             id: 1,
             name: "Population 1".into(),
-            links: vec![Link {
-                operation: Operation::Add,
-                node_id: 30,
-            }],
+            initial_population: 100.0,
+            outputs: vec![link1_30.clone()],
         };
 
+        let link2_30 = Link {
+                link_type: LinkType::Negative,
+                receiver: 30,
+                sender: 2,
+            };
         let node2 = Node::Population {
             id: 2,
             name: "Population 2".into(),
-            links: vec![Link {
-                operation: Operation::Sub,
-                node_id: 30,
-            }],
+            initial_population: 200.0,
+            outputs: vec![link2_30.clone()],
+        };
+
+        let node4 = Node::Constant {
+            id: 4,
+            name: "gravity".into(),
+            value: 9.81,
+            outputs: vec![],
+        };
+
+        let node5 = Node::Constant {
+            id: 5,
+            name: "a".into(),
+            value: 1.6,
+            outputs: vec![],
         };
 
         let node30 = Node::Combinator {
             id: 30,
             name: "Pop1 + Pop2".into(),
             operation: Operation::Add,
-            links: vec![1, 2],
+            outputs: vec![],
+            // Order here matters again. Be careful
+            inputs: vec![link1_30.clone(), link2_30.clone()],
         };
+        
 
         let mut nodes = HashMap::new();
 
         nodes.insert(1, node1);
         nodes.insert(2, node2);
+        nodes.insert(4, node4);
+        nodes.insert(5, node5);
         nodes.insert(30, node30);
 
         let model = Model {
             nodes,
+            links: vec![link1_30, link2_30],
             meta_data: MetaData {
                 start_time: 0.0,
                 end_time: 10.5,
                 delta_time: 0.125,
             },
-            constants: vec![
-                Constant {
-                    name: "gravity".into(),
-                    value: 9.81,
-                },
-                Constant {
-                    name: "Population 1_0".into(),
-                    value: 100.0,
-                },
-                Constant {
-                    name: "Population 2_0".into(),
-                    value: 200.0,
-                },
-                Constant {
-                    name: "a".into(),
-                    value: 1.6,
-                },
-            ],
         };
 
         // When - We serialize the model into JSON

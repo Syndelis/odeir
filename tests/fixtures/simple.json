@@ -4,37 +4,44 @@
         "end_time": 10.50,
         "delta_time": 0.125
     },
-    "nodes": [
-        {
+    "nodes": {
+        "1": {
             "id": 1,
             "name": "Population 1",
             "initial_population": 100.0,
             "outputs": [
-                {"receiver_id": 30, "link_type": "+"},
+                {"receiver": 30, "sender": 1, "link_type": "+"}
             ]
         },
-        {
+        "2": {
             "id": 2,
             "name": "Population 2",
             "initial_population": 200.0,
             "outputs": [
-                {"receiver_id": 2, "link_type": "-"
+                {"receiver": 30, "sender": 2, "link_type": "-"}
             ]
         },
-        {
+        "4": {
             "id": 4,
             "name": "gravity",
-            "value": 9.81
+            "value": 9.81,
+            "outputs": []
         },
-        {
+        "5": {
             "id": 5,
             "name": "a",
-            "value": 1.6
+            "value": 1.6,
+            "outputs": []
         },
-        {
+        "30": {
             "id": 30,
             "name": "Pop1 + Pop2",
-            "operation": "+"
+            "operation": "+",
+            "outputs": [],
+            "inputs": [
+                {"receiver": 30, "sender": 1, "link_type": "+"},
+                {"receiver": 30, "sender": 2, "link_type": "-"}
+            ]
         }
-    ]
+    }
 }

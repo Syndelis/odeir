@@ -1,16 +1,16 @@
 Equations:
 {% for node_id, node in model.nodes|items -%}
-    {% if node.related_constant_name %}
+    {% if node.initial_population is defined %}
         - d{{ node.name }}/dt =
-        {%- for link in node.links -%}
-            {%- set link_node = model.nodes[link.node_id] -%}
-            {%- if link_node.related_constant_name -%}
-                ({{ link.sign }} {{ link_node.name }}) {% if not loop.last %} + {% endif %}
-            {%- else -%}
-                {{ link.sign }} (
-                    {%- for input in link_node.inputs recursive -%}
-                        {%- set inner_link_node = model.nodes[input] %}
-                        {%- if inner_link_node.related_constant_name -%}
+        {%- for link in node.outputs -%}
+            {%- set link_node = model.nodes[link.receiver] -%}
+            {%- if link_node.initial_population is defined -%}
+                {{ link.link_type }} ({{ link_node.name }}) {% if not loop.last %} + {% endif %}
+            {%- elif link_node.operation is defined -%}
+                {{ link.link_type }} (
+                    {%- for link in link_node.inputs recursive -%}
+                        {%- set inner_link_node = model.nodes[link.sender] %}
+                        {%- if inner_link_node.initial_population is defined -%}
                             {{ inner_link_node.name }} {% if not loop.last %} {{ link_node.operation }} {% endif %}
                         {%- else -%}
                             {%- set old_link_node = link_node -%}

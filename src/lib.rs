@@ -8,8 +8,6 @@ use serde::{Deserialize, Serialize};
 
 pub type NodeId = u32;
 
-mod json;
-
 #[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[serde(try_from = "char")]
 #[serde(into = "char")]
@@ -39,7 +37,7 @@ impl TryFrom<char> for LinkType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct Link {
     pub receiver: NodeId,
@@ -48,11 +46,8 @@ pub struct Link {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-#[serde(from = "json::JsonModel")]
-#[serde(into = "json::JsonModel")]
 pub struct Model {
     pub meta_data: MetaData,
-    pub links: Vec<Link>,
     pub nodes: HashMap<NodeId, Node>,
 }
 
@@ -64,12 +59,14 @@ pub struct MetaData {
     delta_time: f64,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum Node {
     Constant {
         id: NodeId,
         name: String,
 
+        #[serde(default)]
         outputs: Vec<Link>,
         value: f64,
     },
@@ -77,6 +74,7 @@ pub enum Node {
         id: NodeId,
         name: String,
 
+        #[serde(default)]
         outputs: Vec<Link>,
         initial_population: f64,
     },
@@ -84,6 +82,7 @@ pub enum Node {
         id: NodeId,
         name: String,
 
+        #[serde(default)]
         outputs: Vec<Link>,
         inputs: Vec<Link>,
         operation: Operation,
@@ -339,7 +338,6 @@ mod tests {
 
         let model = Model {
             nodes,
-            links: vec![link1_30, link2_30],
             meta_data: MetaData {
                 start_time: 0.0,
                 end_time: 10.5,

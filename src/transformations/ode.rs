@@ -1,6 +1,6 @@
 use minijinja::{context, Environment};
 
-use crate::Model;
+use crate::{Model, Node};
 
 const ODE_TEMPLATE: &str = include_str!("../../templates/ode.txt");
 

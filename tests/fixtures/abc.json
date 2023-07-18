@@ -8,22 +8,24 @@
         "1": {
             "id": 1,
             "name": "A",
-            "related_constant_name": "A_0",
-            "links": [
+            "initial_population": 0,
+            "outputs": [
                 {
-                    "sign": "+",
-                    "node_id": 10
+                    "link_type": "+",
+                    "sender": 1,
+                    "receiver": 10
                 }
             ]
         },
         "2": {
             "id": 2,
             "name": "B",
-            "related_constant_name": "B_0",
-            "links": [
+            "initial_population": 0,
+            "outputs": [
                 {
-                    "sign": "-",
-                    "node_id": 10
+                    "link_type": "-",
+                    "sender": 2,
+                    "receiver": 10
                 }
             ]
         },
@@ -32,18 +34,34 @@
             "name": "AB_name",
             "operation": "*",
             "inputs": [
-                1,
-                2
+                {
+                    "link_type": "+",
+                    "sender": 1,
+                    "receiver": 10
+                },
+                {
+                    "link_type": "-",
+                    "sender": 2,
+                    "receiver": 10
+                }
+            ],
+            "outputs": [
+                {
+                    "link_type": "+",
+                    "sender": 10,
+                    "receiver": 11
+                }
             ]
         },
         "3": {
             "id": 3,
             "name": "C",
-            "related_constant_name": "C_0",
-            "links": [
+            "initial_population": 0.0,
+            "outputs": [
                 {
-                    "sign": "+",
-                    "node_id": 11
+                    "link_type": "+",
+                    "sender": 3,
+                    "receiver": 11
                 }
             ]
         },
@@ -51,11 +69,19 @@
             "id": 11,
             "name": "ABC_name",
             "operation": "/",
+            "outputs": [],
             "inputs": [
-                10,
-                3
+                {
+                    "link_type": "+",
+                    "sender": 10,
+                    "receiver": 11
+                },
+                {
+                    "link_type": "+",
+                    "sender": 3,
+                    "receiver": 11
+                }
             ]
         }
-    },
-    "constants": []
+    }
 }

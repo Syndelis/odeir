@@ -1,6 +1,6 @@
-use crate::{Model, Node, NodeId, Link};
+use crate::{Link, Model, Node, NodeId};
 
-use super::utils::{cstr, self};
+use super::utils::{self, cstr};
 
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer and
@@ -8,7 +8,9 @@ use super::utils::{cstr, self};
 /// undefined behavior.
 #[no_mangle]
 pub unsafe extern "C" fn odeir_free_model(model: *mut Model) {
-    if model.is_null() { return; }
+    if model.is_null() {
+        return;
+    }
     let _ = unsafe { Box::from_raw(model) };
 }
 
@@ -24,16 +26,20 @@ pub unsafe extern "C" fn odeir_free_cstr(cstr: cstr) {
 /// frees it. Using the pointer after calling this function will result in
 /// undefined behavior.
 #[no_mangle]
-pub unsafe extern "C" fn odeir_free_node(node: *mut Node)  {
-    if node.is_null() { return; }
+pub unsafe extern "C" fn odeir_free_node(node: *mut Node) {
+    if node.is_null() {
+        return;
+    }
     let _ = unsafe { Box::from_raw(node) };
 }
 
 /// # Safety
 /// This function is unsafe because it derefences and frees a pointer.
 unsafe fn odeir_free_vec<T>(vec: *mut T, len: usize, cap: usize) {
-    if vec.is_null() { return; }
-    let _ = unsafe { Vec::from_raw_parts(vec as *mut T, len, cap) };
+    if vec.is_null() {
+        return;
+    }
+    let _ = unsafe { Vec::from_raw_parts(vec, len, cap) };
 }
 
 /// # Safety

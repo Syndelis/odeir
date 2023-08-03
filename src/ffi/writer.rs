@@ -1,8 +1,8 @@
 use serde_json::Value;
 
-use crate::{Model, Node, NodeId, Link, Constant};
+use crate::{Constant, Link, Model, Node, NodeId};
 
-use super::utils::{cstr, cchar, self};
+use super::utils::{self, cchar, cstr};
 
 #[no_mangle]
 pub extern "C" fn odeir_new_model() -> *mut Model {
@@ -15,9 +15,11 @@ pub extern "C" fn odeir_new_model() -> *mut Model {
 /// model and the name. The caller must ensure that the pointers are valid.
 #[no_mangle]
 pub unsafe extern "C" fn odeir_insert_population(
-    model: *mut Model, id: NodeId, name: cstr, related_constant_name: cstr
-) -> *mut Node
-{
+    model: *mut Model,
+    id: NodeId,
+    name: cstr,
+    related_constant_name: cstr,
+) -> *mut Node {
     let name = utils::cstr_cloned_into_string(name);
     let related_constant_name = utils::cstr_cloned_into_string(related_constant_name);
 
@@ -39,22 +41,27 @@ pub unsafe extern "C" fn odeir_insert_population(
 /// This function is unsafe because it derefences the model raw pointer.
 #[no_mangle]
 pub unsafe extern "C" fn odeir_insert_population_link(
-    node: *mut Node, sign: cchar, target_node_id: NodeId
+    node: *mut Node,
+    sign: cchar,
+    target_node_id: NodeId,
 ) {
     let link = Link {
         sign: sign as u8 as char,
         node_id: target_node_id,
     };
-    
+
     let node = unsafe { &mut *node };
 
     match node {
         Node::Population { links, .. } => {
             links.push(link);
-        },
+        }
         Node::Combinator { id, .. } => {
-            panic!("Tried to call a population method with a non-population node {}", id)
-        },
+            panic!(
+                "Tried to call a population method with a non-population node {}",
+                id
+            )
+        }
     }
 }
 
@@ -63,10 +70,11 @@ pub unsafe extern "C" fn odeir_insert_population_link(
 /// model and the name. The caller must ensure that the pointers are valid.
 #[no_mangle]
 pub unsafe extern "C" fn odeir_insert_combinator(
-    model: *mut Model, node_id: NodeId, name: cstr, operation: cchar
-) -> *mut Node
-{
-
+    model: *mut Model,
+    node_id: NodeId,
+    name: cstr,
+    operation: cchar,
+) -> *mut Node {
     let name = utils::cstr_cloned_into_string(name);
 
     let node = Node::Combinator {
@@ -81,24 +89,24 @@ pub unsafe extern "C" fn odeir_insert_combinator(
     model.nodes.insert(node_id, node);
 
     model.nodes.get_mut(&node_id).unwrap()
-
 }
 
 /// # Safety
 /// This function is unsafe because it derefences the model raw pointer.
 #[no_mangle]
-pub unsafe extern "C" fn odeir_insert_combinator_input(
-    node: *mut Node, input_node_id: NodeId
-) {
+pub unsafe extern "C" fn odeir_insert_combinator_input(node: *mut Node, input_node_id: NodeId) {
     let node = unsafe { &mut *node };
 
     match node {
         Node::Population { id, .. } => {
-            panic!("Tried to call a combinator method with a non-combinator node {}", id)
-        },
+            panic!(
+                "Tried to call a combinator method with a non-combinator node {}",
+                id
+            )
+        }
         Node::Combinator { inputs, .. } => {
             inputs.push(input_node_id);
-        },
+        }
     }
 }
 
@@ -130,7 +138,10 @@ pub unsafe extern "C" fn odeir_debug_string_model(model: *mut Model) -> cstr {
 /// This function is unsafe because it derefences the model raw pointer.
 #[no_mangle]
 pub unsafe extern "C" fn odeir_set_metadata(
-    model: *mut Model, start_time: f64, end_time: f64, delta_time: f64
+    model: *mut Model,
+    start_time: f64,
+    end_time: f64,
+    delta_time: f64,
 ) {
     let model = unsafe { &mut *model };
 
@@ -149,16 +160,13 @@ pub unsafe extern "C" fn odeir_debug_compare_jsons(json1: cstr, json2: cstr) -> 
     let json1: Value = serde_json::from_str(&json1).unwrap();
     let json2: Value = serde_json::from_str(&json2).unwrap();
 
-    let comparison_result = std::panic::catch_unwind(||
-        assert_json_diff::assert_json_eq!(json1, json2)
-    );
+    let comparison_result =
+        std::panic::catch_unwind(|| assert_json_diff::assert_json_eq!(json1, json2));
 
     if let Err(comparion_difference) = comparison_result {
         dbg!(comparion_difference);
         false
-    }
-
-    else {
+    } else {
         true
     }
 }

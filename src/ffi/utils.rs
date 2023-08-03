@@ -14,7 +14,6 @@ pub(crate) unsafe fn cstr_cloned_into_string(cstr: cstr) -> String {
     cstr.to_str().unwrap().to_string()
 }
 
-
 pub(crate) fn string_to_cstr(str: String) -> cstr {
     CString::new(str).unwrap().into_raw()
 }

@@ -1,0 +1,61 @@
+{
+    "meta_data": {
+        "start_time": 0,
+        "end_time": 10.50,
+        "delta_time": 0.1
+    },
+    "nodes": {
+        "1": {
+            "id": 1,
+            "name": "A",
+            "related_constant_name": "A_0",
+            "links": [
+                {
+                    "sign": "+",
+                    "node_id": 10
+                }
+            ]
+        },
+        "2": {
+            "id": 2,
+            "name": "B",
+            "related_constant_name": "B_0",
+            "links": [
+                {
+                    "sign": "-",
+                    "node_id": 10
+                }
+            ]
+        },
+        "10": {
+            "id": 10,
+            "name": "AB_name",
+            "operation": "*",
+            "inputs": [
+                1,
+                2
+            ]
+        },
+        "3": {
+            "id": 3,
+            "name": "C",
+            "related_constant_name": "C_0",
+            "links": [
+                {
+                    "sign": "+",
+                    "node_id": 11
+                }
+            ]
+        },
+        "11": {
+            "id": 11,
+            "name": "ABC_name",
+            "operation": "/",
+            "inputs": [
+                10,
+                3
+            ]
+        }
+    },
+    "constants": []
+}

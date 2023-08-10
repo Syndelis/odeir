@@ -12,5 +12,5 @@ jobs:
     steps:
       - uses: Syndelis/cbindgen-action@master
         with:
-          output: include/odeir.hpp
+          output: include/odeir_internal.hpp
           github_token: ${{ secrets.GITHUB_TOKEN }}

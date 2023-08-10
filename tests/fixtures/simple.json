@@ -1,21 +1,33 @@
 {
-    "metaData": {
-        "startTime": 0,
-        "endTime": 10.50,
-        "deltaTime": 0.1
+    "meta_data": {
+        "start_time": 0.0,
+        "end_time": 10.50,
+        "delta_time": 0.125
     },
-    "nodes": [
-        {
+    "nodes": {
+        "1": {
             "id": 1,
             "name": "Population 1",
-            "related_constant_name": "Population 1_0"
+            "related_constant_name": "Population 1_0",
+            "links": [
+                {
+                    "sign": "+",
+                    "node_id": 30
+                }
+            ]
         },
-        {
+        "2": {
             "id": 2,
             "name": "Population 2",
-            "related_constant_name": "Population 2_0"
+            "related_constant_name": "Population 2_0",
+            "links": [
+                {
+                    "sign": "-",
+                    "node_id": 30
+                }
+            ]
         },
-        {
+        "30": {
             "id": 30,
             "name": "Pop1 + Pop2",
             "operation": "+",
@@ -24,7 +36,7 @@
                 2
             ]
         }
-    ],
+    },
     "constants": [
         {
             "name": "gravity",
@@ -32,11 +44,11 @@
         },
         {
             "name": "Population 1_0",
-            "value": 100
+            "value": 100.0
         },
         {
             "name": "Population 2_0",
-            "value": 200
+            "value": 200.0
         },
         {
             "name": "a",

@@ -1,4 +1,4 @@
-name: FFI Tests
+name: Unit Tests
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - '**'
 
 jobs:
-  test:
+  lib_test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -19,8 +19,55 @@ jobs:
         with:
           toolchain: nightly
 
+      - name: Run Tests
+        run: cargo +nightly test
+
+  ffi_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: "true"
+
+      - name: Use Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly
+
+      - name: Build Staticlib in Debug Mode
+        run: cargo +nightly build
+
       - name: Build Tests
         run: make -C tests build
 
+      - name: Upload Cpp Test Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpp-test-build
+          path: tests/test
+
       - name: Run Tests
         run: make -C tests run
+
+  valgrind_mem_leak_check:
+    runs-on: ubuntu-latest
+    needs: ffi_test
+    steps:
+      - name: Install valgrind
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: valgrind
+          version: 1.0
+          execute_install_scripts: true
+
+      - name: Download Cpp Test Build
+        uses: actions/download-artifact@v3
+        with:
+          name: cpp-test-build
+      
+      - name: Add Run Permissions to Test Program
+        run: chmod +x ./test
+      
+      - name: Run Valgrind Against Tests
+        run: valgrind --leak-check=full --show-leak-kinds=all --undef-value-errors=no --error-exitcode=1 ./test

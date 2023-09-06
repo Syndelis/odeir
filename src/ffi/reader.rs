@@ -1,3 +1,5 @@
+use std::{fs::File, io::BufReader};
+
 use crate::{Link, Model, Node, NodeId};
 
 use super::utils::{self, cstr};
@@ -9,8 +11,34 @@ pub enum NodeType {
 }
 
 /// # Safety
+/// This function is unsafe because it dereferences the string pointer.
+/// This function may return a null pointer if the file doesn't exist or if the
+/// file content is invalid JSON.
+#[no_mangle]
+pub unsafe extern "C" fn odeir_json_file_path_to_model(json_file_path: cstr) -> *mut Model {
+    let json_file_path = utils::cstr_cloned_into_string(json_file_path);
+
+    let Ok(json_file) = File::open(json_file_path) else {
+        eprintln!("DBG: File not found!!");
+        return std::ptr::null_mut();
+    };
+
+    let json_reader = BufReader::new(json_file);
+
+    let model = serde_json::from_reader(json_reader);
+
+    match model {
+        Ok(model) => Box::leak(Box::new(model)),
+        Err(_) => {
+            eprintln!("DBG: couldn't make it into a model!!");
+            std::ptr::null_mut()
+        },
+    }
+}
+
+/// # Safety
 /// This function is unsafe because it derefences the string pointer.
-/// This function may return a null pointer if the JSON is invalid.
+/// This function may return a null pointer if the string is invalid JSON.
 #[no_mangle]
 pub unsafe extern "C" fn odeir_json_to_model(json: cstr) -> *mut Model {
     let json = utils::cstr_cloned_into_string(json);

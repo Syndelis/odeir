@@ -8,23 +8,9 @@
 #include <type_traits>
 
 #include <odeir_internal.hpp>
+#include <odeir_common.hpp>
 
 using internal_api::NodeId;
-
-class ModelWrapper {
-protected:
-    internal_api::Model *model;
-
-public:
-    ModelWrapper() : model(internal_api::odeir_new_model()) {}
-    ~ModelWrapper() {
-        odeir_free_model(model);
-    }
-
-    internal_api::Model *get() const {
-        return model;
-    }
-};
 
 struct InitialState {};
 

@@ -98,8 +98,14 @@ Node *odeir_insert_population(Model *model, NodeId id, cstr name, cstr related_c
 void odeir_insert_population_link(Node *node, cchar sign, NodeId target_node_id);
 
 /// # Safety
+/// This function is unsafe because it dereferences the string pointer.
+/// This function may return a null pointer if the file doesn't exist or if the
+/// file content is invalid JSON.
+Model *odeir_json_file_path_to_model(cstr json_file_path);
+
+/// # Safety
 /// This function is unsafe because it derefences the string pointer.
-/// This function may return a null pointer if the JSON is invalid.
+/// This function may return a null pointer if the string is invalid JSON.
 Model *odeir_json_to_model(cstr json);
 
 /// # Safety

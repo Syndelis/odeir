@@ -13,7 +13,7 @@ TEST_CASE( "trying out the API" ) {
 
     if (auto model = maybeModel) {
         for (auto node : model->nodes()) {
-            std::cout << node << std::endl;
+            std::cout << node.name << std::endl;
         }
     }
 

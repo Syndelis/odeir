@@ -20,10 +20,9 @@
 namespace reader_api {
 
 class Population {
-protected:
-    std::shared_ptr<PopulationLinksWrapper> links;
-
 public:
+    std::vector<internal_api::Link> links;
+
     Population() { std::runtime_error("Can't call reader_api::Population's default constructor"); }
 
     Population(const Population& other) = delete;
@@ -31,15 +30,19 @@ public:
     Population(Population&& other) = default;
 
     Population(internal_api::Node *nodePtr, std::shared_ptr<ModelWrapper> model) {
-        links = std::make_shared<PopulationLinksWrapper>(nodePtr);
+        size_t len, cap;
+        internal_api::Link *linksPtr = internal_api::odeir_population_take_links(nodePtr, &len, &cap);
+
+        links = std::vector<internal_api::Link>(linksPtr, linksPtr + len);
+
+        internal_api::odeir_free_link_vec(linksPtr, len, cap);
     }
 };
 
 class Combinator {
-protected:
-    std::shared_ptr<CombinatorInputsWrapper> inputs;
-
 public:
+    std::vector<internal_api::NodeId> inputs;
+
     Combinator() { std::runtime_error("Can't call reader_api::Combinator's default constructor"); }
 
     Combinator(const Combinator& other) = delete;
@@ -47,7 +50,12 @@ public:
     Combinator(Combinator&& other) = default;
 
     Combinator(internal_api::Node *nodePtr, std::shared_ptr<ModelWrapper> model) {
-        inputs = std::make_shared<CombinatorInputsWrapper>(nodePtr);
+        size_t len, cap;
+        const internal_api::NodeId *inputsPtr = internal_api::odeir_combinator_take_inputs(nodePtr, &len, &cap);
+
+        inputs = std::vector<internal_api::NodeId>(inputsPtr, inputsPtr + len);
+
+        internal_api::odeir_free_node_id_vec((internal_api::NodeId *)inputsPtr, len, cap);
     }
 };
 

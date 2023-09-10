@@ -41,38 +41,4 @@ public:
     }
 };
 
-class CombinatorInputsWrapper {
-protected:
-    const internal_api::NodeId *inputsPtr;
-    size_t len, cap;
-
-public:
-    CombinatorInputsWrapper() = delete;
-
-    CombinatorInputsWrapper(internal_api::Node *nodePtr) {
-        inputsPtr = internal_api::odeir_combinator_take_inputs(nodePtr, &len, &cap);
-    }
-
-    ~CombinatorInputsWrapper() {
-        internal_api::odeir_free_node_id_vec((internal_api::NodeId *)inputsPtr, len, cap);
-    }
-};
-
-class PopulationLinksWrapper {
-protected:
-    internal_api::Link *linksPtr;
-    size_t len, cap;
-
-public:
-    PopulationLinksWrapper() = delete;
-
-    PopulationLinksWrapper(internal_api::Node *nodePtr) {
-        linksPtr = internal_api::odeir_population_take_links(nodePtr, &len, &cap);
-    }
-
-    ~PopulationLinksWrapper() {
-        internal_api::odeir_free_link_vec((internal_api::Link *)linksPtr, len, cap);
-    }
-};
-
 #endif

@@ -54,9 +54,9 @@ pub struct Model {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct MetaData {
-    start_time: f64,
-    end_time: f64,
-    delta_time: f64,
+    pub start_time: f64,
+    pub end_time: f64,
+    pub delta_time: f64,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]

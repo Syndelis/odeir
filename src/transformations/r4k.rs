@@ -6,7 +6,7 @@ use crate::{Model, Node};
 
 const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.txt");
 
-pub fn render_ode(model: Model) -> String {
+pub fn render_ode(model: &Model) -> String {
     let env = Environment::new();
 
     fn get_nodes_of(model: &Model, cb: impl Fn(&Node)->bool) -> Vec<&Node> {
@@ -41,7 +41,7 @@ mod tests {
 
         let model = serde_json::from_str::<Model>(ABC_JSON_STR).unwrap();
 
-        let ode = render_ode(model);
+        let ode = render_ode(&model);
 
         std::fs::write("/tmp/ode.py", &ode).unwrap();
 

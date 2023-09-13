@@ -18,7 +18,7 @@ def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
             {{ link.link_type }}(
                 {%- for link in link_node.inputs recursive -%}
                     {%- set inner_link_node = model.nodes[link.sender] %}
-                    {%- if inner_link_node.initial_population is defined -%}
+                    {%- if inner_link_node.initial_population is defined or inner_link_node.value is defined -%}
                         {{ inner_link_node.name }} {% if not loop.last %} {{ link_node.operation }} {% endif %}
                     {%- else -%}
                         {%- set old_link_node = link_node -%}

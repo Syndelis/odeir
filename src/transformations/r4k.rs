@@ -9,18 +9,8 @@ const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.txt");
 pub fn render_ode(model: &Model) -> String {
     let env = Environment::new();
 
-    fn get_nodes_of(model: &Model, cb: impl Fn(&Node)->bool) -> Vec<&Node> {
-        let mut tmp = model.nodes
-			 .iter()
-			 .filter(|(_, node)| cb(node)).collect::<Vec<_>>();
-        tmp.sort_by_cached_key(|(k, _)| *k);
-        tmp.into_iter()
-			 .map(|(_, node)| node)
-			 .collect()
-    }
-
-    let constants = get_nodes_of(&model, |node| matches!(node, Node::Constant{..}));
-    let populations = get_nodes_of(&model, |node| matches!(node, Node::Population{..}));
+    let constants = model.get_constants().collect::<Vec<_>>();
+    let populations = model.get_populations().collect::<Vec<_>>();
 
     let mut ctx = context! {
         model => model,

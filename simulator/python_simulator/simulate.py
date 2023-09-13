@@ -41,7 +41,8 @@ def main(
             t_span=(0, tf + dt),
             y0=y0,
             t_eval=sim_steps,
-            args=ode_params
+            args=ode_params,
+            method="LSODA"
     )
     if not data.success:
         print(data.message)

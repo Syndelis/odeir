@@ -2,7 +2,7 @@
 pub mod ffi;
 pub mod transformations;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap as Map;
 
 use serde::{Deserialize, Serialize};
 
@@ -48,7 +48,7 @@ pub struct Link {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Model {
     pub meta_data: MetaData,
-    pub nodes: HashMap<NodeId, Node>,
+    pub nodes: Map<NodeId, Node>,
 }
 
 
@@ -90,21 +90,21 @@ pub enum Node {
 }
 
 impl Node {
-    fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         match self {
             Self::Constant { name, .. } => name,
             Self::Population { name, .. } => name,
             Self::Combinator { name, .. } => name,
         }
     }
-    fn id(&self) -> NodeId {
+    pub fn id(&self) -> NodeId {
         match self {
             Self::Constant { id, .. } => *id,
             Self::Population { id, .. } => *id,
             Self::Combinator { id, .. } => *id,
         }
     }
-    fn outputs(&mut self) -> &mut Vec<Link> {
+    pub fn outputs(&mut self) -> &mut Vec<Link> {
         match self {
             Self::Constant { outputs, .. } => outputs,
             Self::Population { outputs, .. } => outputs,
@@ -328,7 +328,7 @@ mod tests {
         };
         
 
-        let mut nodes = HashMap::new();
+        let mut nodes = Map::new();
 
         nodes.insert(1, node1);
         nodes.insert(2, node2);

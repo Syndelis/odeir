@@ -3,11 +3,11 @@ def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
     {% for node in populations -%}
         {{- node.name }}, {%- endfor %} = y
 
-    {% if constants %}
+    {%- if constants %}
     {% for node in constants -%}
     {{- node.name }},
 {%- endfor %} = constants
-    {% endif %}
+    {% endif -%}
 
 {% for node in populations %}
     d{{ node.name }} = {% for link in node.outputs -%}

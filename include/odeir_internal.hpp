@@ -36,7 +36,6 @@ struct Node;
 using NodeId = uint32_t;
 
 struct Link {
-    NodeId receiver;
     NodeId sender;
     LinkType link_type;
     bool operator==(const Link &other) const {

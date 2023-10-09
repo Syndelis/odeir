@@ -88,8 +88,8 @@
             "operation": "-"
         }
     ],
-    "equations": [
-        "dead_equation",
-        "alive_equation"
-    ]
+    "equations": {
+        "dead": "dead_equation",
+        "alive": "alive_equation"
+    }
 }

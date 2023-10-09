@@ -5,10 +5,22 @@ use crate::Map;
 pub mod cellular_automata;
 pub mod ode;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Equations {
     pub arguments: Map<String, Argument>,
-    pub equations: Vec<String>,
+    pub equations: Map<String, String>,
+}
+
+impl Equations {
+    pub fn new() -> Self {
+        Default::default()
+    }
+    pub fn insert_argument(&mut self, arg: Argument) {
+        self.arguments.insert(arg.name().to_owned(), arg);
+    }
+    pub fn insert_equation(&mut self, argument_name: impl Into<String>, equation_name: impl Into<String>) {
+        self.equations.insert(argument_name.into(), equation_name.into());
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

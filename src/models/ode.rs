@@ -2,15 +2,25 @@ use serde::{Deserialize, Serialize};
 
 use super::Equations;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct Metadata {
-    start_time: f64,
-    delta_time: f64,
-    end_time: f64,
+    pub start_time: f64,
+    pub delta_time: f64,
+    pub end_time: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Model {
     pub metadata: Metadata,
+    #[serde(flatten)]
     pub equations: Equations,
+}
+
+impl Model {
+    pub fn new(metadata: Metadata) -> Self {
+        Self {
+            metadata,
+            equations: Equations::new(),
+        }
+    }
 }

@@ -1,38 +1,34 @@
 import numpy as np
 def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
-    {% for node in populations -%}
-        {{- node.name }}, {%- endfor %} = y
+    # populations
+    {% for arg in populations -%}
+        {{- arg.name }}, {%- endfor %} = y
 
+    # constants
     {%- if constants %}
-    {% for node in constants -%}
-    {{- node.name }},
+    {% for arg in constants -%}
+    {{- arg.name }},
 {%- endfor %} = constants
     {% endif -%}
 
-{% for node in populations %}
-    d{{ node.name }} = {% for link in node.outputs -%}
-        {%- set link_node = model.nodes[link.receiver] -%}
-        {%- if link_node.operations is defined -%}
-            {{ link.link_type }}({{ link_node.name }}) {% if not loop.last %} {% endif %}
-        {%- else -%}
-            {{ link.link_type }}(
-                {%- for link in link_node.inputs recursive -%}
-                    {%- set inner_link_node = model.nodes[link.sender] %}
-                    {%- if inner_link_node.initial_population is defined or inner_link_node.value is defined -%}
-                        {{ inner_link_node.name }} {% if not loop.last %} {{ link_node.operation }} {% endif %}
-                    {%- else -%}
-                        {%- set old_link_node = link_node -%}
-                        {%- set link_node = inner_link_node -%}
-                        {{ loop(inner_link_node.inputs) }}
-                        {%- set link_node = old_link_node -%}
-                        {% if not loop.last %} {{ link_node.operation }} {% endif %}
-                    {%- endif -%}
-                {%- endfor -%}
-            )
+{%- macro display_composite(arg) %}
+    {%- for comp in arg.composition -%}
+        {%- if comp.contribution == '-' -%} {{- comp.contribution }} {% endif -%}
+        {%- if comp.value is defined -%} {{ comp.value }}
+        {%- else -%} 
+            {%- set a = model.arguments[comp.name] -%}
+            {%- if a.value is defined -%} {{- a.name }}
+            {%- else -%} ({{- display_composite(a) -}})
+            {%- endif -%}
         {%- endif -%}
-    {% endfor %}
+        {%- if not loop.last %} {{ arg.operation }} {% endif -%}
+    {%- endfor %} {% endmacro -%}
+
+{% for pop in populations %}
+    {%- set comp = model.arguments[model.equations[pop.name]] %}
+    d{{ pop.name }} = {{ display_composite(comp) }}
 {%- endfor %}
 
     return np.array([
-    {%- for node in populations -%}
-            d{{ node.name }}, {% endfor %}])
+    {%- for arg in populations -%}
+            d{{ arg.name }} {%- if not loop.last %}, {%- endif -%} {% endfor %}])

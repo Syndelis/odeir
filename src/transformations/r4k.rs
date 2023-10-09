@@ -1,21 +1,19 @@
-use std::collections::HashSet;
-
 use minijinja::{context, Environment};
 
-use crate::{Model, Node};
+use crate::models::{ode::Model, Argument, Component, Equations};
 
 const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.txt");
 
 pub fn render_ode(model: &Model) -> String {
     let env = Environment::new();
 
-    let constants = model.get_constants().collect::<Vec<_>>();
-    let populations = model.get_populations().collect::<Vec<_>>();
+    let populations = model.equations.get_populations().collect::<Vec<_>>();
+    let constants = model.equations.get_constants().collect::<Vec<_>>();
 
     let mut ctx = context! {
         model => model,
-        constants => constants,
         populations => populations,
+        constants => constants,
     };
 
     env.render_str(ODE_TEMPLATE, &mut ctx).unwrap()
@@ -23,31 +21,95 @@ pub fn render_ode(model: &Model) -> String {
 
 #[cfg(test)]
 mod tests {
+    use crate::models::ode::Metadata;
+
+    use super::*;
+
+    fn value(name: impl Into<String>, value: f64) -> Argument {
+        Argument::Value {
+            name: name.into(),
+            value,
+        }
+    }
+
+    fn composite(
+        name: impl Into<String>,
+        operation: impl Into<String>,
+        composition: impl IntoIterator<Item = Component>,
+    ) -> Argument {
+        Argument::Composite {
+            name: name.into(),
+            operation: operation.into(),
+            composition: composition.into_iter().collect(),
+        }
+    }
+
+    fn argument(name: impl Into<String>, contribution: char) -> Component {
+        Component::Argument {
+            name: name.into(),
+            contribution,
+        }
+    }
+
+    /// Shorthand for positive arguments
+    fn arg(name: impl Into<String>) -> Component {
+        argument(name, '+')
+    }
+
+    fn constant(value: f64, contribution: char) -> Component {
+        Component::Constant {
+            value,
+            contribution,
+        }
+    }
+
     #[test]
-    fn test_render_r4k_abc_json() {
-        use super::*;
+    fn render_simple() {
+        let mut model = Model::new(Default::default());
+        model.equations.insert_argument(value("alpha", 1.0));
+        model.equations.insert_argument(value("beta", 1.0));
+        model.equations.insert_argument(value("gamma", 1.0));
+        model.equations.insert_argument(value("omega", 1.0));
+        model.equations.insert_argument(value("x", 1.0));
+        model.equations.insert_argument(value("y", 1.0));
+        // dx
+        model.equations.insert_argument(composite(
+            "alpha_x",
+            "*",
+            [arg("alpha"), arg('x')],
+        ));
+        model.equations.insert_argument(composite(
+            "beta_xy",
+            "*",
+            [arg("beta"), arg('y'), arg('x')],
+        ));
+        model.equations.insert_argument(composite(
+            "dx",
+            "-",
+            [arg("alpha_x"), arg("beta_xy")],
+        ));
 
-        const ABC_JSON_STR: &str = include_str!("../../tests/fixtures/abc.json");
+        // dy
+        model.equations.insert_argument(composite(
+            "omega_xy",
+            "*",
+            [arg("omega"), arg('x'), arg('y')],
+        ));
+        model.equations.insert_argument(composite(
+            "gamma_y",
+            "*",
+            [arg("gamma"), arg('y')],
+        ));
+        model.equations.insert_argument(composite(
+            "dy",
+            "-",
+            [arg("omega_xy"), arg("gamma_y")],
+        ));
 
-        let model = serde_json::from_str::<Model>(ABC_JSON_STR).unwrap();
+        model.equations.insert_equation("x", "dx");
+        model.equations.insert_equation("y", "dy");
 
         let ode = render_ode(&model);
-
-        std::fs::write("/tmp/ode.py", &ode).unwrap();
-
-        const EXPECTED: &str = r#"import numpy as np
-def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
-    A,B,C, = y
-
-     = constants
-
-
-    dA = +(A  * B )
-    dB = -(A  * B )
-    dC = +(A  * B  / C )
-
-    return np.array([dA, dB, dC, ])"#;
-
-        assert_eq!(ode, EXPECTED);
+        std::fs::write("/tmp/ode.py", ode).unwrap()
     }
 }

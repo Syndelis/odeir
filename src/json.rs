@@ -10,7 +10,7 @@ use crate::{
 struct Json {
     metadata: Metadata,
     arguments: Vec<Argument>,
-    equations: Vec<String>,
+    equations: Map<String, String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -72,6 +72,8 @@ impl From<Model> for Json {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use super::*;
 
     use crate::models::Component;
@@ -170,7 +172,10 @@ mod test {
                     ],
                 },
             ],
-            equations: vec!["dead_equation".into(), "alive_equation".into()],
+            equations: [("dead".into(), "dead_equation".into()), ("alive".into(), "alive_equation".into())]
+                .iter()
+                .cloned()
+                .collect(),
         };
         assert_json_eq!(expected, model);
     }

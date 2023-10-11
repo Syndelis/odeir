@@ -1,5 +1,5 @@
 import numpy as np
-def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
+def system( dt: np.float64, y: np.ndarray, *constants) -> np.ndarray:
     # populations
     {% for arg in populations -%}
         {{- arg.name }}, {%- endfor %} = y
@@ -13,7 +13,7 @@ def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
 
 {%- macro display_composite(arg) %}
     {%- for comp in arg.composition -%}
-        {%- if comp.contribution == '-' -%} {{- comp.contribution }} {% endif -%}
+        {%- if comp.contribution|trim != '+' -%} {{ comp.contribution }} {% endif -%}
         {%- if comp.value is defined -%} {{ comp.value }}
         {%- else -%} 
             {%- set a = model.arguments[comp.name] -%}

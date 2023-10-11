@@ -6,12 +6,11 @@ import scipy
 import ode
 
 
-def writer(fn): 
-    @contextlib.contextmanager
-    def stdout():
-        yield sys.stdout
-
-    return open(fn, 'w') if fn else stdout()
+def writer(filename: str): 
+    if len(filename) != 0:
+        return open(filename, 'w')
+    else:
+        return sys.stdout
 
 def euler(func, ti, yi, dt, *args):
     return yi + func(ti, yi, *args) * dt
@@ -26,7 +25,7 @@ def rk4(func, ti, yi, dt, *args):
 
 def main(
         # Simulation Args
-        tf, dt,
+        tf, dt, st,
 
         # ODE Args
         y0, ode_params,
@@ -34,7 +33,7 @@ def main(
         # Output Args
         output_file: str = ""
     ):
-    sim_steps = np.arange(0, tf + dt, dt)
+    sim_steps = np.arange(st, tf + dt, dt)
 
     data = scipy.integrate.solve_ivp(
             fun=ode.system,
@@ -42,8 +41,7 @@ def main(
             y0=y0,
             t_eval=sim_steps,
             args=ode_params,
-            method="LSODA"
-    )
+        )
     if not data.success:
         print(data.message)
         return
@@ -52,8 +50,8 @@ def main(
     data = data.T
 
     with writer(output_file) as f:
-        for dt, y in zip(sim_steps, data.y):
-            values = np.array([dt] + y).round(4)
+        for dt, y in zip(sim_steps, data):
+            values = np.array([dt] + list(y)).round(4)
 
             s =','.join([ str(v) for v in values ]) + '\n'
 
@@ -62,6 +60,7 @@ def main(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--st", type=np.float64, default=np.float64(0))
     parser.add_argument("--tf", required=True, type=np.float64)
     parser.add_argument("--dt", required=True, type=np.float64)
     parser.add_argument("--y0", required=True, nargs='+', type=np.float64)
@@ -76,6 +75,7 @@ if __name__ == "__main__":
         os.makedirs(dirs, exist_ok=True)
 
     main(
+        st=args.st,
         tf=args.tf,
         dt=args.dt,
         y0=np.array(args.y0),

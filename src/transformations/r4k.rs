@@ -65,51 +65,39 @@ mod tests {
 
     #[test]
     fn render_simple() {
-        let mut model = Model::new(Default::default());
-        model.equations.insert_argument(value("alpha", 1.0));
-        model.equations.insert_argument(value("beta", 1.0));
-        model.equations.insert_argument(value("gamma", 1.0));
-        model.equations.insert_argument(value("omega", 1.0));
-        model.equations.insert_argument(value("x", 1.0));
-        model.equations.insert_argument(value("y", 1.0));
+        let mut model = Model::new(Metadata { start_time: 10.0, ..Default::default()});
+        model.equations.insert_argument(value("w", 9.0));
+        model.equations.insert_argument(value("x", -1.0));
+        model.equations.insert_argument(value("y", 10.0));
         // dx
         model.equations.insert_argument(composite(
-            "alpha_x",
+            "xy",
             "*",
-            [arg("alpha"), arg('x')],
-        ));
-        model.equations.insert_argument(composite(
-            "beta_xy",
-            "*",
-            [arg("beta"), arg('y'), arg('x')],
-        ));
-        model.equations.insert_argument(composite(
-            "dx",
-            "-",
-            [arg("alpha_x"), arg("beta_xy")],
+            [arg("y"), arg('x')],
         ));
 
-        // dy
         model.equations.insert_argument(composite(
-            "omega_xy",
-            "*",
-            [arg("omega"), arg('x'), arg('y')],
-        ));
-        model.equations.insert_argument(composite(
-            "gamma_y",
-            "*",
-            [arg("gamma"), arg('y')],
-        ));
-        model.equations.insert_argument(composite(
-            "dy",
+            "sub",
             "-",
-            [arg("omega_xy"), arg("gamma_y")],
+            [arg("w"), arg('x')],
         ));
 
-        model.equations.insert_equation("x", "dx");
-        model.equations.insert_equation("y", "dy");
+        model.equations.insert_equation("x", "xy");
+        model.equations.insert_equation("y", "sub");
 
         let ode = render_ode(&model);
-        std::fs::write("/tmp/ode.py", ode).unwrap()
+        let expected = r#"import numpy as np
+def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
+    # populations
+    x,y, = y
+
+    # constants
+    w, = constants
+    
+    dx = y * x 
+    dy = w - x 
+
+    return np.array([dx,dy])"#;
+        assert_eq!(ode, expected);
     }
 }

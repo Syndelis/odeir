@@ -1,4 +1,3 @@
-use assert_json_diff::assert_json_eq;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -6,14 +5,14 @@ use crate::{
     Map,
 };
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct Json {
     metadata: Metadata,
     arguments: Vec<Argument>,
     equations: Map<String, String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 enum ModelMetadata {
     #[serde(rename = "ode")]
@@ -22,21 +21,25 @@ enum ModelMetadata {
     CellularAutomata {},
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct Metadata {
+    #[serde(default)]
     name: String,
     #[serde(flatten)]
     model_metadata: ModelMetadata,
+    #[serde(default)]
     positions: Map<String, Position>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Position {
     x: f64,
     y: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(from="Json")]
+#[serde(into="Json")]
 pub enum Model {
     ODE(models::ode::Model),
     CellularAutomata(models::cellular_automata::Model),
@@ -66,13 +69,24 @@ impl From<Json> for Model {
 
 impl From<Model> for Json {
     fn from(value: Model) -> Self {
-        todo!("serialization")
+        match value {
+            Model::ODE(model) => Json {
+                metadata: Metadata {
+                    name: "TODO".into(),
+                    model_metadata: ModelMetadata::ODE(model.metadata),
+                    positions: Map::new(),
+                },
+                arguments: model.equations.arguments.into_iter().map(|(_, arg)| arg).collect(),
+                equations: model.equations.equations,
+            },
+            Model::CellularAutomata(_) => todo!("Implement CA")
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
+    use assert_json_diff::assert_json_eq;
 
     use super::*;
 
@@ -172,10 +186,13 @@ mod test {
                     ],
                 },
             ],
-            equations: [("dead".into(), "dead_equation".into()), ("alive".into(), "alive_equation".into())]
-                .iter()
-                .cloned()
-                .collect(),
+            equations: [
+                ("dead".into(), "dead_equation".into()),
+                ("alive".into(), "alive_equation".into()),
+            ]
+            .iter()
+            .cloned()
+            .collect(),
         };
         assert_json_eq!(expected, model);
     }

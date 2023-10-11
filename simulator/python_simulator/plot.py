@@ -51,10 +51,9 @@ def b_plot(simulation_data: tuple[np.ndarray, np.ndarray], output_file: str):
 
     fig.savefig(output_file)
 
-def plot(simulation_data: tuple[np.ndarray, np.ndarray], output_file: str):
+def plot(simulation_data: tuple[np.ndarray, np.ndarray], output_file: str, components: list[str]):
     steps, simulation = simulation_data
 
-    components = [ 'S', 'E', 'I', "ES", "EI", 'P' ]
     colors = [ 'b', 'g', 'r', 'c', 'm', 'y' ]
 
     for i, component in enumerate(components):
@@ -65,8 +64,8 @@ def plot(simulation_data: tuple[np.ndarray, np.ndarray], output_file: str):
         ax.grid()
 
         ax.set(
-            title="Inhibitive Competition",
-            xlabel="Time (Days)",
+            title="ODE",
+            xlabel="Time",
             ylabel=f"[ {component} ]",
         )
 
@@ -80,10 +79,11 @@ def plot(simulation_data: tuple[np.ndarray, np.ndarray], output_file: str):
         fig.savefig(plot_file)
 
 
-def main(output_file, csv_file: str = ''):
+def main(output_file, components, csv_file: str = ''):
     plot(
         simulation_data=load_simulation(csv_file),
         output_file=output_file,
+        components=components
     )
 
 if __name__ == "__main__":
@@ -91,6 +91,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--output-file", type=str, required=True)
     parser.add_argument("--input-file", type=str, default='')
+    parser.add_argument("--components", type=str, nargs='+', required=True)
 
     args = parser.parse_args()
 
@@ -100,6 +101,7 @@ if __name__ == "__main__":
 
     main(
         csv_file=args.input_file,
-        output_file=args.output_file
+        output_file=args.output_file,
+        components=args.components
     )
 

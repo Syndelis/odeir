@@ -1,15 +1,8 @@
-use std::collections::{BTreeMap, HashMap};
 
-use serde::{Deserialize, Serialize};
+type Map<K, V> = std::collections::BTreeMap<K, V>;
 
-#[cfg(not(test))]
-type Map<K, V> = HashMap<K, V>;
-// Trocamos para `BTreeMap` para testar pois ele garante uma ordem dos elementos
-#[cfg(test)]
-type Map<K, V> = BTreeMap<K, V>;
-
-mod json;
-mod models;
+pub mod json;
+pub mod models;
 pub mod transformations;
 
 #[cfg(test)]

@@ -4,7 +4,7 @@ use crate::models::Argument;
 pub mod r4k;
 
 impl crate::models::Equations {
-    fn get_equations_of<'a>(
+    pub fn get_equations_of<'a>(
         &'a self,
         mut cb: impl FnMut(&'a Argument) -> bool,
     ) -> impl Iterator<Item = &'a Argument> {

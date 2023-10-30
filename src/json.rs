@@ -6,15 +6,15 @@ use crate::{
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Json {
-    metadata: Metadata,
-    arguments: Vec<Argument>,
-    equations: Map<String, String>,
+pub struct Json {
+    pub metadata: Metadata,
+    pub arguments: Vec<Argument>,
+    pub equations: Map<String, String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
-enum ModelMetadata {
+pub enum ModelMetadata {
     #[serde(rename = "ode")]
     ODE(models::ode::Metadata),
     #[serde(rename = "cellular-automata")]
@@ -22,13 +22,13 @@ enum ModelMetadata {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Metadata {
+pub struct Metadata {
     #[serde(default)]
-    name: String,
+    pub name: String,
     #[serde(flatten)]
-    model_metadata: ModelMetadata,
+    pub model_metadata: ModelMetadata,
     #[serde(default)]
-    positions: Map<String, Position>,
+    pub positions: Map<String, Position>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -1,14 +1,14 @@
 use minijinja::{context, Environment};
 
-use crate::models::{ode::Model, Argument, Component, Equations};
+use crate::models::ode::Model;
 
 const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.txt");
 
 pub fn render_ode(model: &Model) -> String {
     let env = Environment::new();
 
-    let populations = model.equations.get_populations().collect::<Vec<_>>();
-    let constants = model.equations.get_constants().collect::<Vec<_>>();
+    let populations = model.get_populations().collect::<Vec<_>>();
+    let constants = model.get_constants().collect::<Vec<_>>();
 
     let mut ctx = context! {
         model => model,
@@ -22,6 +22,7 @@ pub fn render_ode(model: &Model) -> String {
 #[cfg(test)]
 mod tests {
     use crate::models::ode::Metadata;
+    use crate::models::{Argument, Component};
 
     use super::*;
 
@@ -65,25 +66,20 @@ mod tests {
 
     #[test]
     fn render_simple() {
-        let mut model = Model::new(Metadata { start_time: 10.0, ..Default::default()});
-        model.equations.insert_argument(value("w", 9.0));
-        model.equations.insert_argument(value("x", -1.0));
-        model.equations.insert_argument(value("y", 10.0));
+        let mut model = Model::new(Metadata {
+            start_time: 10.0,
+            ..Default::default()
+        });
+        model.insert_argument(value("w", 9.0));
+        model.insert_argument(value("x", -1.0));
+        model.insert_argument(value("y", 10.0));
         // dx
-        model.equations.insert_argument(composite(
-            "xy",
-            "*",
-            [arg("y"), arg('x')],
-        ));
+        model.insert_argument(composite("xy", "*", [arg("y"), arg('x')]));
 
-        model.equations.insert_argument(composite(
-            "sub",
-            "-",
-            [arg("w"), arg('x')],
-        ));
+        model.insert_argument(composite("sub", "-", [arg("w"), arg('x')]));
 
-        model.equations.insert_equation("x", "xy");
-        model.equations.insert_equation("y", "sub");
+        // model.equations.insert_equation("x", "xy");
+        // model.equations.insert_equation("y", "sub");
 
         let ode = render_ode(&model);
         let expected = r#"import numpy as np

@@ -1,6 +1,6 @@
-use super::Equations;
+use super::CoreModel;
 
 #[derive(Debug, Clone)]
 pub struct Model {
-    pub equations: Equations,
+    pub core: CoreModel,
 }

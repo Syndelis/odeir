@@ -26,7 +26,7 @@ mod tests {
 
         let ode = render_ode(model);
 
-        const EXPECTED: &str = "Equations:
+        const EXPECTED: &str = "CoreModel:
 
         - dA/dt =+ (A  * B ) +
         - dB/dt =- (A  * B ) +

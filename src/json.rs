@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    models::{self, Argument, Equations},
+    models::{self, Argument, CoreModel, Equation},
     Map,
 };
 
@@ -9,7 +9,7 @@ use crate::{
 pub struct Json {
     pub metadata: Metadata,
     pub arguments: Vec<Argument>,
-    pub equations: Map<String, String>,
+    pub equations: Vec<Equation>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -38,8 +38,8 @@ pub struct Position {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(from="Json")]
-#[serde(into="Json")]
+#[serde(from = "Json")]
+#[serde(into = "Json")]
 pub enum Model {
     ODE(models::ode::Model),
     CellularAutomata(models::cellular_automata::Model),
@@ -47,7 +47,7 @@ pub enum Model {
 
 impl From<Json> for Model {
     fn from(value: Json) -> Self {
-        let equations = Equations {
+        let core = CoreModel {
             arguments: value
                 .arguments
                 .into_iter()
@@ -57,12 +57,9 @@ impl From<Json> for Model {
         };
         match value.metadata.model_metadata {
             ModelMetadata::CellularAutomata {} => {
-                Self::CellularAutomata(models::cellular_automata::Model { equations })
+                Self::CellularAutomata(models::cellular_automata::Model { core })
             }
-            ModelMetadata::ODE(metadata) => Self::ODE(models::ode::Model {
-                equations,
-                metadata,
-            }),
+            ModelMetadata::ODE(metadata) => Self::ODE(models::ode::Model { core, metadata }),
         }
     }
 }
@@ -76,10 +73,10 @@ impl From<Model> for Json {
                     model_metadata: ModelMetadata::ODE(model.metadata),
                     positions: Map::new(),
                 },
-                arguments: model.equations.arguments.into_iter().map(|(_, arg)| arg).collect(),
-                equations: model.equations.equations,
+                arguments: model.core.arguments.into_values().collect(),
+                equations: model.core.equations,
             },
-            Model::CellularAutomata(_) => todo!("Implement CA")
+            Model::CellularAutomata(_) => todo!("Implement CA"),
         }
     }
 }
@@ -187,12 +184,20 @@ mod test {
                 },
             ],
             equations: [
-                ("dead".into(), "dead_equation".into()),
-                ("alive".into(), "alive_equation".into()),
+                Equation {
+                    name: "dead_equation".to_string(),
+                    operates_on: "dead".to_string(),
+                    argument: "dead_equation".to_string(),
+                    contribution: '+',
+                },
+                Equation {
+                    name: "alive_equation".to_string(),
+                    operates_on: "alive".to_string(),
+                    argument: "alive_equation".to_string(),
+                    contribution: '+',
+                },
             ]
-            .iter()
-            .cloned()
-            .collect(),
+            .to_vec(),
         };
         assert_json_eq!(expected, model);
     }

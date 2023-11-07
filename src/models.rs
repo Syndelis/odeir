@@ -6,20 +6,20 @@ pub mod cellular_automata;
 pub mod ode;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct Equations {
+pub struct CoreModel {
     pub arguments: Map<String, Argument>,
-    pub equations: Map<String, String>,
+    pub equations: Vec<Equation>,
 }
 
-impl Equations {
+impl CoreModel {
     pub fn new() -> Self {
         Default::default()
     }
     pub fn insert_argument(&mut self, arg: Argument) {
         self.arguments.insert(arg.name().to_owned(), arg);
     }
-    pub fn insert_equation(&mut self, argument_name: impl Into<String>, equation_name: impl Into<String>) {
-        self.equations.insert(argument_name.into(), equation_name.into());
+    pub fn insert_equation(&mut self, eq: Equation) {
+        self.equations.push(eq);
     }
 }
 
@@ -61,4 +61,12 @@ impl Component {
             }
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Equation {
+    pub name: String,
+    pub operates_on: String,
+    pub argument: String,
+    pub contribution: char,
 }

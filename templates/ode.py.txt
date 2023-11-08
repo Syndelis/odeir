@@ -1,5 +1,5 @@
 import numpy as np
-def system( dt: np.float64, y: np.ndarray, *constants) -> np.ndarray:
+def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
     # populations
     {% for arg in populations -%}
         {{- arg.name }}, {%- endfor %} = y

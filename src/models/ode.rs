@@ -11,14 +11,16 @@ pub struct Metadata {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct OdeModel {
+    pub name: String,
     pub metadata: Metadata,
     #[serde(flatten)]
     pub core: CoreModel,
 }
 
 impl OdeModel {
-    pub fn new(metadata: Metadata) -> Self {
+    pub fn new(name: String, metadata: Metadata) -> Self {
         Self {
+            name,
             metadata,
             core: CoreModel::new(),
         }

@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn render_simple() {
-        let mut model = Model::new(Metadata {
+        let mut model = Model::new("_".into(), Metadata {
             start_time: 10.0,
             ..Default::default()
         });

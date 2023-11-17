@@ -47,20 +47,9 @@ impl Argument {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(untagged)]
-pub enum Component {
-    Argument { name: String, contribution: char },
-    Constant { value: f64, contribution: char },
-}
-
-impl Component {
-    fn contribution(&self) -> char {
-        match self {
-            Component::Argument { contribution, .. } | Component::Constant { contribution, .. } => {
-                *contribution
-            }
-        }
-    }
+pub struct Component {
+    pub name: String,
+    pub contribution: char,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

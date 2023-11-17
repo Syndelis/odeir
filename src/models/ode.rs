@@ -10,13 +10,13 @@ pub struct Metadata {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct Model {
+pub struct OdeModel {
     pub metadata: Metadata,
     #[serde(flatten)]
     pub core: CoreModel,
 }
 
-impl Model {
+impl OdeModel {
     pub fn new(metadata: Metadata) -> Self {
         Self {
             metadata,
@@ -25,7 +25,7 @@ impl Model {
     }
 }
 
-impl std::ops::Deref for Model {
+impl std::ops::Deref for OdeModel {
     type Target = CoreModel;
 
     fn deref(&self) -> &Self::Target {
@@ -33,7 +33,7 @@ impl std::ops::Deref for Model {
     }
 }
 
-impl std::ops::DerefMut for Model {
+impl std::ops::DerefMut for OdeModel {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.core
     }

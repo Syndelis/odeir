@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    models::{self, Argument, CoreModel, Equation},
+    models::{self, Argument, CoreModel, Equation, cellular_automata::CaModel, ode::OdeModel},
     Map,
 };
 
@@ -41,8 +41,8 @@ pub struct Position {
 #[serde(from = "Json")]
 #[serde(into = "Json")]
 pub enum Model {
-    ODE(models::ode::Model),
-    CellularAutomata(models::cellular_automata::Model),
+    ODE(OdeModel),
+    CellularAutomata(CaModel),
 }
 
 impl From<Json> for Model {
@@ -57,9 +57,9 @@ impl From<Json> for Model {
         };
         match value.metadata.model_metadata {
             ModelMetadata::CellularAutomata {} => {
-                Self::CellularAutomata(models::cellular_automata::Model { core })
+                Self::CellularAutomata(CaModel { core })
             }
-            ModelMetadata::ODE(metadata) => Self::ODE(models::ode::Model { core, metadata }),
+            ModelMetadata::ODE(metadata) => Self::ODE(OdeModel { core, metadata }),
         }
     }
 }

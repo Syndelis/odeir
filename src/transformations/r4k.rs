@@ -1,10 +1,10 @@
 use minijinja::{context, Environment};
 
-use crate::models::ode::Model;
+use crate::models::ode::OdeModel;
 
 const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.txt");
 
-pub fn render_ode(model: &Model) -> String {
+pub fn render_ode(model: &OdeModel) -> String {
     let env = Environment::new();
 
     let populations = model.get_populations().collect::<Vec<_>>();

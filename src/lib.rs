@@ -4,8 +4,8 @@ pub mod json;
 pub mod models;
 pub mod transformations;
 
-pub use json::{Json, Metadata, Model, ModelMetadata};
-pub use models::{Argument, Component, Equation, CoreModel};
+pub use json::{Json, Metadata, Model, ModelMetadata, Position};
+pub use models::{Argument, Component, CoreModel, Equation};
 
 #[cfg(test)]
 mod tests {}

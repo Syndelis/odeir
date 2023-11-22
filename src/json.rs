@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    models::{self, Argument, CoreModel, Equation, cellular_automata::CaModel, ode::OdeModel},
+    models::{self, cellular_automata::CaModel, ode::OdeModel, Argument, CoreModel, Equation},
     Map,
 };
 
@@ -33,8 +33,8 @@ pub struct Metadata {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Position {
-    x: f64,
-    y: f64,
+    pub x: f64,
+    pub y: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,11 +54,10 @@ impl From<Json> for Model {
                 .map(|arg| (arg.name().to_owned(), arg))
                 .collect(),
             equations: value.equations,
+            positions: value.metadata.positions,
         };
         match value.metadata.model_metadata {
-            ModelMetadata::CellularAutomata {} => {
-                Self::CellularAutomata(CaModel { core })
-            }
+            ModelMetadata::CellularAutomata {} => Self::CellularAutomata(CaModel { core }),
             ModelMetadata::ODE(metadata) => Self::ODE(OdeModel { core, metadata }),
         }
     }
@@ -71,7 +70,7 @@ impl From<Model> for Json {
                 metadata: Metadata {
                     name: "TODO".into(),
                     model_metadata: ModelMetadata::ODE(model.metadata),
-                    positions: Map::new(),
+                    positions: model.core.positions,
                 },
                 arguments: model.core.arguments.into_values().collect(),
                 equations: model.core.equations,

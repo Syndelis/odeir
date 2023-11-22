@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Map;
+use crate::{Map, Position};
 
 pub mod cellular_automata;
 pub mod ode;
@@ -9,6 +9,7 @@ pub mod ode;
 pub struct CoreModel {
     pub arguments: Map<String, Argument>,
     pub equations: Vec<Equation>,
+    pub positions: Map<String, Position>,
 }
 
 impl CoreModel {

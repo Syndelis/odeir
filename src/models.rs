@@ -56,7 +56,7 @@ pub struct Component {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Equation {
     pub name: String,
-    pub operates_on: String,
+    pub operates_on: Option<String>,
     pub argument: String,
     pub contribution: char,
 }

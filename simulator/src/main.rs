@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use odeir::models::{ode::Model, Argument};
+use odeir::models::{ode::OdeModel as Model, Argument};
 
 use clap::Parser;
 
@@ -29,7 +29,6 @@ fn real_path(name: impl AsRef<Path>) -> PathBuf {
 fn run_simulation(folder: &Path, model: &Model) -> std::io::Result<()> {
     let delta_time = model.metadata.delta_time.to_string();
     let mut ode_constants: Vec<_> = model
-        .equations
         .get_constants()
         .filter_map(|c| match c {
             Argument::Value { value, .. } => Some(value),
@@ -38,7 +37,6 @@ fn run_simulation(folder: &Path, model: &Model) -> std::io::Result<()> {
         .map(ToString::to_string)
         .collect();
     let (mut ode_initial, components): (Vec<_>, Vec<_>) = model
-        .equations
         .get_populations()
         .filter_map(|pop| match pop {
             Argument::Value { value, name } => Some((value.to_string(), name)),

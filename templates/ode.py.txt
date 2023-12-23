@@ -25,7 +25,7 @@ def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
     {%- endfor %} {% endmacro -%}
 
 {% for pop in populations %}
-    {%- set comp = model.arguments[model.equations[pop.name]] %}
+    {%- set comp = model.arguments[equations[pop.name].argument] %}
     d{{ pop.name }} = {{ display_composite(comp) }}
 {%- endfor %}
 

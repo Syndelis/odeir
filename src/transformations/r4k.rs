@@ -1,6 +1,6 @@
 use minijinja::{context, Environment};
 
-use crate::models::ode::OdeModel;
+use crate::{models::ode::OdeModel, Map};
 
 const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.txt");
 
@@ -9,12 +9,16 @@ pub fn render_ode(model: &OdeModel) -> String {
 
     let populations = model.get_populations().collect::<Vec<_>>();
     let constants = model.get_constants().collect::<Vec<_>>();
+    let equations = model.equations.iter().cloned().filter_map(|eq| Some((eq.operates_on.clone()?, eq))).collect::<Map<_, _>>();
 
     let mut ctx = context! {
         model => model,
+        equations => equations,
         populations => populations,
         constants => constants,
     };
+
+    dbg!(&ctx);
 
     env.render_str(ODE_TEMPLATE, &mut ctx).unwrap()
 }

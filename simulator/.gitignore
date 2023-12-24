@@ -1,2 +1,2 @@
-python_simulator/**
-!python_simulator/plot.py
+**/__pycache__/
+**/ode.py

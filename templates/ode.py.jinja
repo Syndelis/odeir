@@ -1,5 +1,32 @@
+import argparse, contextlib, sys, os
+import scipy
 import numpy as np
-def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
+
+def initial_values() -> np.ndarray:
+    {% for arg in populations -%}
+        {{- arg.name }}_0 = {{ arg.value }}
+    {% endfor -%}
+
+    return np.array((
+        {% for arg in populations -%}
+            {{- arg.name }}_0,
+        {% endfor -%}
+    ))
+
+
+def constants() -> list:
+    {% for constant in constants -%}
+        {{- constant.name }} = {{ constant.value }}
+    {% endfor -%}
+
+    return [
+        {% for constant in constants -%}
+            {{- constant.name }},
+        {% endfor -%}
+    ]
+
+
+def system(t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
     # populations
     {% for arg in populations -%}
         {{- arg.name }}, {%- endfor %} = y
@@ -26,9 +53,9 @@ def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
 
 {% for pop in populations %}
     {%- set comp = model.arguments[equations[pop.name].argument] %}
-    d{{ pop.name }} = {{ display_composite(comp) }}
+    d{{ pop.name }}_dt = {{ display_composite(comp) }}
 {%- endfor %}
 
     return np.array([
     {%- for arg in populations -%}
-            d{{ arg.name }} {%- if not loop.last %}, {%- endif -%} {% endfor %}])
+            d{{ arg.name }}_dt {%- if not loop.last %}, {%- endif -%} {% endfor %}])

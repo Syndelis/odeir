@@ -25,6 +25,7 @@ pub fn render_ode(model: &OdeModel) -> String {
 
 #[cfg(test)]
 mod tests {
+    use crate::Equation;
     use crate::models::ode::Metadata;
     use crate::models::{Argument, Component};
 
@@ -50,7 +51,7 @@ mod tests {
     }
 
     fn argument(name: impl Into<String>, contribution: char) -> Component {
-        Component::Argument {
+        Component {
             name: name.into(),
             contribution,
         }
@@ -61,43 +62,68 @@ mod tests {
         argument(name, '+')
     }
 
-    fn constant(value: f64, contribution: char) -> Component {
-        Component::Constant {
-            value,
-            contribution,
+    fn equation(name: impl Into<String>, operates_on: impl Into<String>, composition: Component) -> Equation {
+        Equation {
+            name: name.into(),
+            operates_on: Some(operates_on.into()),
+            argument: composition.name,
+            contribution: composition.contribution,
         }
     }
 
     #[test]
     fn render_simple() {
-        let mut model = Model::new("_".into(), Metadata {
+        let mut model = OdeModel::new("_".into(), Metadata {
             start_time: 10.0,
             ..Default::default()
         });
-        model.insert_argument(value("w", 9.0));
-        model.insert_argument(value("x", -1.0));
-        model.insert_argument(value("y", 10.0));
-        // dx
-        model.insert_argument(composite("xy", "*", [arg("y"), arg('x')]));
 
-        model.insert_argument(composite("sub", "-", [arg("w"), arg('x')]));
+        model.insert_argument(value("A", 10_f64));
+        model.insert_argument(value("B", 20_f64));
+        model.insert_argument(value("k", 0.5));
 
-        // model.equations.insert_equation("x", "xy");
-        // model.equations.insert_equation("y", "sub");
+        model.insert_argument(composite("A+B", "+", [arg("A"), arg("B")]));
+        model.insert_equation(equation("dA/dt", "A", arg("A+B")));
+
+        model.insert_argument(composite("(A+B)*k", "*", [arg("A+B"), arg("k")]));
+        model.insert_equation(equation("dB/dt", "B", arg("(A+B)*k")));
 
         let ode = render_ode(&model);
-        let expected = r#"import numpy as np
-def system( t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
+
+        println!("{ode}");
+
+        let expected = r#"import argparse, contextlib, sys, os
+import scipy
+import numpy as np
+
+def initial_values() -> np.ndarray:
+    A_0 = 10.0
+    B_0 = 20.0
+    return np.array((
+        A_0,
+        B_0,
+        ))
+
+
+def constants() -> list:
+    k = 0.5
+    return [
+        k,
+        ]
+
+
+def system(t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
     # populations
-    x,y, = y
+    A,B, = y
 
     # constants
-    w, = constants
+    k, = constants
     
-    dx = y * x 
-    dy = w - x 
+    dA_dt = A + B 
+    dB_dt = (A + B ) * k 
 
-    return np.array([dx,dy])"#;
+    return np.array([dA_dt,dB_dt])"#;
+
         assert_eq!(ode, expected);
     }
 }

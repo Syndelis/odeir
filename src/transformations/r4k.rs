@@ -88,40 +88,8 @@ mod tests {
 
         let ode = render_ode(&model);
 
-        println!("{ode}");
+        const EXPECTED: &str = include_str!("fixtures/abc_ode.py");
 
-        let expected = r#"import argparse, contextlib, sys, os
-import scipy
-import numpy as np
-
-def initial_values() -> np.ndarray:
-    A_0 = 10.0
-    B_0 = 20.0
-    return np.array((
-        A_0,
-        B_0,
-        ))
-
-
-def constants() -> list:
-    k = 0.5
-    return [
-        k,
-        ]
-
-
-def system(t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
-    # populations
-    A,B, = y
-
-    # constants
-    k, = constants
-    
-    dA_dt = A + B 
-    dB_dt = (A + B ) * k 
-
-    return np.array([dA_dt,dB_dt])"#;
-
-        assert_eq!(ode, expected);
+        assert_eq!(ode, EXPECTED);
     }
 }

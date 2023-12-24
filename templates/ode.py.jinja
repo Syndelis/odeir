@@ -2,12 +2,6 @@ import argparse, contextlib, sys, os
 import scipy
 import numpy as np
 
-def writer(filename: str | None):
-    if filename:
-        return open(filename, 'w')
-    else:
-        return sys.stdout
-
 def initial_values() -> np.ndarray:
     {% for arg in populations -%}
         {{- arg.name }}_0 = {{ arg.value }}
@@ -28,6 +22,14 @@ def constants() -> list:
     return [
         {% for constant in constants -%}
             {{- constant.name }},
+        {% endfor -%}
+    ]
+
+
+def variable_names() -> list[str]:
+    return [
+        {% for arg in populations -%}
+            "{{- arg.name }}",
         {% endfor -%}
     ]
 
@@ -74,7 +76,7 @@ def simulation_output_to_csv(sim_steps, simulation_output, write_to) -> str:
 
     populatio_values_per_dt = simulation_output.y.T
 
-    write_to.write("t,{% for arg in populations %}{{ arg.name }}{% if not loop.last %},{% endif %}{% endfor %}\n")
+    write_to.write(f"t,{','.join(variable_names())}\n")
 
     for dt, y in zip(sim_steps, populatio_values_per_dt):
         write_to.write(f"{dt},")
@@ -82,7 +84,43 @@ def simulation_output_to_csv(sim_steps, simulation_output, write_to) -> str:
         write_to.write("\n")
 
 
-def simulate(output_to, st=0, tf=10, dt=0.1):
+def plot_simulation(sim_steps, simulation_output, filename):
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+
+    with PdfPages(filename) as pdf:
+        # All
+        all_fig, all_ax = plt.subplots()
+        all_ax.grid()
+        all_ax.set(title=__name__, xlabel="Time", ylabel="Concentration")
+
+        # Individually
+        for variable_name, variable_line_data in zip(variable_names(), simulation_output.y):
+            fig, ax = plt.subplots()
+            ax.grid()
+
+            ax.set(
+                title=variable_name,
+                xlabel="Time",
+                ylabel="Concentration",
+            )
+
+            ax.plot(simulation_output.t, variable_line_data)
+            all_ax.plot(simulation_output.t, variable_line_data)
+
+            pdf.savefig(fig)
+
+        pdf.savefig(all_fig)
+
+
+def file_or_stdout(filename: str | None):
+    if filename:
+        return open(filename, 'w')
+    else:
+        return sys.stdout
+
+
+def simulate(filename, st=0, tf=10, dt=0.1, plot=False):
     sim_steps = np.arange(st, tf + dt, dt)
 
     simulation_output = scipy.integrate.solve_ivp(
@@ -93,8 +131,12 @@ def simulate(output_to, st=0, tf=10, dt=0.1):
         t_eval=sim_steps,
     )
 
-    with writer(output_to) as f:
-        simulation_output_to_csv(sim_steps, simulation_output, f)
+    if plot:
+        plot_simulation(sim_steps, simulation_output, filename)
+
+    else:
+        with file_or_stdout(filename) as f:
+            simulation_output_to_csv(sim_steps, simulation_output, f)
 
 
 if __name__ == "__main__":
@@ -103,14 +145,18 @@ if __name__ == "__main__":
     parser.add_argument("--st", type=float, default=0)
     parser.add_argument("--tf", type=float, default=10)
     parser.add_argument("--dt", type=float, default=0.1)
-    parser.add_argument("--output-file", default=None)
+    parser.add_argument("-o", "--output", default=None)
+    parser.add_argument("--csv", action=argparse.BooleanOptionalAction)
 
     args = parser.parse_args()
 
-    if args.output_file:
-        dirs = os.path.dirname(args.output_file)
+    if args.output is None and not args.csv:
+        parser.error("when plotting (a.k.a --no-csv), an output file name is required via --output")
+
+    if args.output:
+        dirs = os.path.dirname(args.output)
 
         if dirs:
             os.makedirs(dirs, exist_ok=True)
 
-    simulate(args.output_file)
+    simulate(args.output, plot=not args.csv)

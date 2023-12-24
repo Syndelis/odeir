@@ -2,7 +2,7 @@ use minijinja::{context, Environment};
 
 use crate::{models::ode::OdeModel, Map};
 
-const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.txt");
+const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.jinja");
 
 pub fn render_ode(model: &OdeModel) -> String {
     let env = Environment::new();

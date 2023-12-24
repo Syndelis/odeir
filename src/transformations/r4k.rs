@@ -18,8 +18,6 @@ pub fn render_ode(model: &OdeModel) -> String {
         constants => constants,
     };
 
-    dbg!(&ctx);
-
     env.render_str(ODE_TEMPLATE, &mut ctx).unwrap()
 }
 

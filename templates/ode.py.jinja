@@ -113,25 +113,22 @@ def plot_simulation(sim_steps, simulation_output, filename):
     with PdfPages(filename) as pdf:
         # All
         all_fig, all_ax = plt.subplots()
-        all_ax.grid()
-        all_ax.set(title=__name__, xlabel="Time", ylabel="Concentration")
+        all_ax.set(title="", xlabel="Time", ylabel="Concentration")
 
         # Individually
         for variable_name, variable_line_data in zip(variable_names(), simulation_output.y):
             fig, ax = plt.subplots()
-            ax.grid()
-
+            fig.set_size_inches(8, 6)
             ax.set(
                 title=variable_name,
                 xlabel="Time",
                 ylabel="Concentration",
-            )
-
+            )            
             ax.plot(simulation_output.t, variable_line_data)
             all_ax.plot(simulation_output.t, variable_line_data)
 
             pdf.savefig(fig)
-
+        all_ax.legend(variable_names(),loc="best")
         pdf.savefig(all_fig)
 
 
@@ -142,7 +139,7 @@ def file_or_stdout(filename: str | None):
         return sys.stdout
 
 
-def simulate(filename, st=0, tf=10, dt=0.1, plot=False):
+def simulate(filename, st=0, tf=50, dt=0.01, plot=False):
     sim_steps = np.arange(st, tf + dt, dt)
 
     simulation_output = scipy.integrate.solve_ivp(
@@ -165,8 +162,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--st", type=float, default=0)
-    parser.add_argument("--tf", type=float, default=10)
-    parser.add_argument("--dt", type=float, default=0.1)
+    parser.add_argument("--tf", type=float, default=50)
+    parser.add_argument("--dt", type=float, default=0.01)
     parser.add_argument("-o", "--output", default=None)
     parser.add_argument("--csv", action=argparse.BooleanOptionalAction)
 

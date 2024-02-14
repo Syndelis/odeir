@@ -2,6 +2,23 @@ import argparse, contextlib, sys, os
 import scipy
 import numpy as np
 
+{% if extensions -%}
+# User extensions
+def node(func=None, format=None):
+    if func is None and format is not None:
+        def inner(inners_func):
+            return inners_func
+
+        return inner
+
+    else:
+        return func
+
+{% for ext in extensions -%}
+{{- ext -}}
+{%- endfor -%}
+{%- endif %}
+
 def initial_values() -> np.ndarray:
     {% for arg in populations -%}
         {{- arg.name }}_0 = {{ arg.value }}
@@ -39,14 +56,15 @@ def system(t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
     {% for arg in populations -%}
         {{- arg.name }}, {%- endfor %} = y
 
-    # constants
     {%- if constants %}
+    # constants
     {% for arg in constants -%}
     {{- arg.name }},
 {%- endfor %} = constants
     {% endif -%}
 
 {%- macro display_composite(arg) %}
+    {%- if arg.style == "Prefixed" -%} {{ arg.operation }}({%- endif -%}
     {%- for comp in arg.composition -%}
         {%- if comp.contribution|trim != '+' -%} {{ comp.contribution }} {% endif -%}
         {%- if comp.value is defined -%} {{ comp.value }}
@@ -56,7 +74,11 @@ def system(t: np.float64, y: np.ndarray, *constants) -> np.ndarray:
             {%- else -%} ({{- display_composite(a) -}})
             {%- endif -%}
         {%- endif -%}
-        {%- if not loop.last %} {{ arg.operation }} {% endif -%}
+        {%- if not loop.last -%}
+            {%- if arg.style == "Prefixed" -%},{%- else -%}{{ arg.operation }}{%- endif -%}
+        {%- else -%}
+        {%- if arg.style == "Prefixed" -%}){%- endif -%}
+        {%- endif -%}
     {%- endfor %} {% endmacro -%}
 
 {% for pop in populations %}

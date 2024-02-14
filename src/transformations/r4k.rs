@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use minijinja::{context, Environment};
 
 use crate::{models::ode::OdeModel, Map};
@@ -11,11 +13,18 @@ pub fn render_ode(model: &OdeModel) -> String {
     let constants = model.get_constants().collect::<Vec<_>>();
     let equations = model.equations.iter().cloned().filter_map(|eq| Some((eq.operates_on.clone()?, eq))).collect::<Map<_, _>>();
 
+    let extensions: Vec<String> = model
+        .extension_files
+        .iter()
+        .filter_map(|filename| std::fs::read_to_string(PathBuf::from(filename)).ok())
+        .collect();
+
     let mut ctx = context! {
         model => model,
         equations => equations,
         populations => populations,
         constants => constants,
+        extensions => extensions,
     };
 
     env.render_str(ODE_TEMPLATE, &mut ctx).unwrap()

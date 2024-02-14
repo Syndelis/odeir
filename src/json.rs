@@ -29,6 +29,8 @@ pub struct Metadata {
     pub model_metadata: ModelMetadata,
     #[serde(default)]
     pub positions: Map<String, Position>,
+    #[serde(default)]
+    pub extension_files: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -59,23 +61,25 @@ impl From<Json> for Model {
         let name = value.metadata.name;
         match value.metadata.model_metadata {
             ModelMetadata::CellularAutomata {} => Self::CellularAutomata(CaModel { name, core }),
-            ModelMetadata::ODE(metadata) => Self::ODE(OdeModel { name, core, metadata }),
+            ModelMetadata::ODE(metadata) => Self::ODE(OdeModel { name, core, metadata, extension_files: value.metadata.extension_files }),
         }
     }
 }
 
 impl From<Model> for Json {
     fn from(value: Model) -> Self {
-        let (equations, model_metadata, name) = match value {
+        let (equations, model_metadata, name, extension_files) = match value {
             Model::CellularAutomata(model) => (
                 model.core,
                 ModelMetadata::CellularAutomata {},
                 model.name,
+                Vec::new(),
             ),
             Model::ODE(model) => (
                 model.core,
                 ModelMetadata::ODE(model.metadata),
                 model.name,
+                model.extension_files,
             ),
         };
         Self {
@@ -84,6 +88,7 @@ impl From<Model> for Json {
             metadata: Metadata {
                 name,
                 model_metadata,
+                extension_files,
                 positions: Map::new(),
             },
         }

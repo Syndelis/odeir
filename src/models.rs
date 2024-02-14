@@ -34,8 +34,16 @@ pub enum Argument {
     Composite {
         name: String,
         operation: String,
+        #[serde(default)] style: CompositionStyle,
         composition: Vec<Component>,
     },
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy)]
+pub enum CompositionStyle {
+    #[default]
+    Infixed,
+    Prefixed,
 }
 
 impl Argument {

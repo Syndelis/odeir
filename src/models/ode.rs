@@ -13,6 +13,7 @@ pub struct Metadata {
 pub struct OdeModel {
     pub name: String,
     pub metadata: Metadata,
+    pub extension_files: Vec<String>,
     #[serde(flatten)]
     pub core: CoreModel,
 }
@@ -23,6 +24,7 @@ impl OdeModel {
             name,
             metadata,
             core: CoreModel::new(),
+            extension_files: Vec::new(),
         }
     }
 }

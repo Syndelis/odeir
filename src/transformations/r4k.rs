@@ -44,6 +44,7 @@ mod tests {
         Argument::Composite {
             name: name.into(),
             operation: operation.into(),
+            style: Default::default(),
             composition: composition.into_iter().collect(),
         }
     }

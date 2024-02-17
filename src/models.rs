@@ -34,7 +34,8 @@ pub enum Argument {
     Composite {
         name: String,
         operation: String,
-        #[serde(default)] style: CompositionStyle,
+        #[serde(default)]
+        style: CompositionStyle,
         composition: Vec<Component>,
     },
 }

@@ -11,7 +11,12 @@ pub fn render_ode(model: &OdeModel, extension_lookup_paths: &[&PathBuf]) -> Stri
 
     let populations = model.get_populations().collect::<Vec<_>>();
     let constants = model.get_constants().collect::<Vec<_>>();
-    let equations = model.equations.iter().cloned().filter_map(|eq| Some((eq.operates_on.clone()?, eq))).collect::<Map<_, _>>();
+    let equations = model
+        .equations
+        .iter()
+        .cloned()
+        .filter_map(|eq| Some((eq.operates_on.clone()?, eq)))
+        .collect::<Map<_, _>>();
 
     let extensions: Vec<String> = model
         .extension_files
@@ -41,9 +46,9 @@ pub fn render_ode(model: &OdeModel, extension_lookup_paths: &[&PathBuf]) -> Stri
 
 #[cfg(test)]
 mod tests {
-    use crate::Equation;
     use crate::models::ode::Metadata;
     use crate::models::{Argument, Component};
+    use crate::Equation;
 
     use super::*;
 
@@ -79,7 +84,11 @@ mod tests {
         argument(name, '+')
     }
 
-    fn equation(name: impl Into<String>, operates_on: impl Into<String>, composition: Component) -> Equation {
+    fn equation(
+        name: impl Into<String>,
+        operates_on: impl Into<String>,
+        composition: Component,
+    ) -> Equation {
         Equation {
             name: name.into(),
             operates_on: Some(operates_on.into()),
@@ -90,10 +99,13 @@ mod tests {
 
     #[test]
     fn render_simple() {
-        let mut model = OdeModel::new("_".into(), Metadata {
-            start_time: 10.0,
-            ..Default::default()
-        });
+        let mut model = OdeModel::new(
+            "_".into(),
+            Metadata {
+                start_time: 10.0,
+                ..Default::default()
+            },
+        );
 
         model.insert_argument(value("A", 10_f64));
         model.insert_argument(value("B", 20_f64));

@@ -61,7 +61,12 @@ impl From<Json> for Model {
         let name = value.metadata.name;
         match value.metadata.model_metadata {
             ModelMetadata::CellularAutomata {} => Self::CellularAutomata(CaModel { name, core }),
-            ModelMetadata::ODE(metadata) => Self::ODE(OdeModel { name, core, metadata, extension_files: value.metadata.extension_files }),
+            ModelMetadata::ODE(metadata) => Self::ODE(OdeModel {
+                name,
+                core,
+                metadata,
+                extension_files: value.metadata.extension_files,
+            }),
         }
     }
 }

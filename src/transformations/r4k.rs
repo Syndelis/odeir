@@ -6,7 +6,7 @@ use crate::{models::ode::OdeModel, Map};
 
 const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.jinja");
 
-pub fn render_ode(model: &OdeModel) -> String {
+pub fn render_ode(model: &OdeModel, extension_lookup_paths: &[&PathBuf]) -> String {
     let env = Environment::new();
 
     let populations = model.get_populations().collect::<Vec<_>>();
@@ -16,7 +16,16 @@ pub fn render_ode(model: &OdeModel) -> String {
     let extensions: Vec<String> = model
         .extension_files
         .iter()
-        .filter_map(|filename| std::fs::read_to_string(PathBuf::from(filename)).ok())
+        .filter_map(|filename| {
+            let filename_as_path = PathBuf::from(filename);
+            let filename_as_path = &filename_as_path;
+            let full_path = extension_lookup_paths
+                .iter()
+                .find(|path| path.ends_with(filename))
+                .unwrap_or(&filename_as_path);
+
+            std::fs::read_to_string(full_path).ok()
+        })
         .collect();
 
     let mut ctx = context! {
@@ -96,7 +105,7 @@ mod tests {
         model.insert_argument(composite("(A+B)*k", "*", [arg("A+B"), arg("k")]));
         model.insert_equation(equation("dB/dt", "B", arg("(A+B)*k")));
 
-        let ode = render_ode(&model);
+        let ode = render_ode(&model, &[]);
 
         const EXPECTED: &str = include_str!("fixtures/abc_ode.py");
 

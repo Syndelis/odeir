@@ -113,6 +113,7 @@ def plot_simulation(sim_steps, simulation_output, filename):
     with PdfPages(filename) as pdf:
         # All
         all_fig, all_ax = plt.subplots()
+        all_fig.set_size_inches(8, 6)
         all_ax.set(title="", xlabel="Time", ylabel="Concentration")
 
         # Individually

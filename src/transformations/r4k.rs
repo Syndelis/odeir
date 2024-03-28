@@ -4,7 +4,10 @@ use minijinja::{context, Environment};
 
 use crate::{models::ode::OdeModel, Map};
 
-const ODE_TEMPLATE: &str = include_str!("../../templates/ode.py.jinja");
+const ODE_TEMPLATE: &str = concat!{ 
+    include_str!("../../templates/ode.py.jinja"),
+    include_str!("../../templates/ode-support.py")
+};
 
 pub fn render_ode(model: &OdeModel, extension_lookup_paths: &[&PathBuf]) -> String {
     let env = Environment::new();

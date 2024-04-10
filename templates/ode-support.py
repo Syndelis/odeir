@@ -28,7 +28,7 @@ COLORS = [
     'tab:cyan',
 ]
 
-def plot_simulation(sim_steps, simulation_output, filename):
+def plot_simulation(sim_steps, simulation_output, filename, x_label="time (days)", y_label="conc/ml"):
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
 
@@ -36,7 +36,7 @@ def plot_simulation(sim_steps, simulation_output, filename):
         # All
         all_fig, all_ax = plt.subplots()
         all_fig.set_size_inches(8, 6)
-        all_ax.set(title="", xlabel="Time", ylabel="Concentration")
+        all_ax.set(title="", xlabel=x_label, ylabel=y_label)
 
         # Individually
         for i, (variable_name, variable_line_data) in enumerate(zip(variable_names(), simulation_output.y)):
@@ -44,8 +44,8 @@ def plot_simulation(sim_steps, simulation_output, filename):
             fig.set_size_inches(8, 6)
             ax.set(
                 title=variable_name,
-                xlabel="Time",
-                ylabel="Concentration",
+                xlabel=x_label, 
+                ylabel=y_label, 
             )            
             ax.plot(simulation_output.t, variable_line_data, color=COLORS[i % len(COLORS)])
             all_ax.plot(simulation_output.t, variable_line_data)
@@ -62,7 +62,7 @@ def file_or_stdout(filename: str | None):
         return sys.stdout
 
 
-def simulate(filename, st=0, tf=50, dt=0.1, plot=False):
+def simulate(filename, st=0, tf=50, dt=0.1, plot=False, x_label="time (days)", y_label="conc/ml"):
     sim_steps = np.arange(st, tf + dt, dt)
 
     simulation_output = scipy.integrate.solve_ivp(
@@ -74,7 +74,7 @@ def simulate(filename, st=0, tf=50, dt=0.1, plot=False):
     )
 
     if plot:
-        plot_simulation(sim_steps, simulation_output, filename)
+        plot_simulation(sim_steps, simulation_output, filename, x_label, y_label)
 
     else:
         with file_or_stdout(filename) as f:
@@ -89,6 +89,8 @@ if __name__ == "__main__":
     parser.add_argument("--dt", type=float, default=0.01)
     parser.add_argument("-o", "--output", default=None)
     parser.add_argument("--csv", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--xlabel", type=str, default="time (days)")  
+    parser.add_argument("--ylabel", type=str, default="conc/ml")
 
     args = parser.parse_args()
 
@@ -107,4 +109,7 @@ if __name__ == "__main__":
         st=args.st,
         tf=args.tf,
         dt=args.dt,
+        x_label=args.xlabel,
+        y_label=args.ylabel
     )
+

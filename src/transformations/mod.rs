@@ -1,6 +1,6 @@
 use crate::models::Argument;
 
-// pub mod ode;
+pub mod ode;
 pub mod r4k;
 
 impl crate::models::CoreModel {

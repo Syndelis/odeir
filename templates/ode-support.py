@@ -62,46 +62,56 @@ def file_or_stdout(filename: str | None):
         return sys.stdout
 
 
-def simulate(filename, st=0, tf=50, dt=0.1, plot=False, x_label="time (days)", y_label="conc/ml"):
+def update_constants_with_params(constants, params):
+    updated_constants = constants.copy()
+
+    constant_names = [constant[0] for constant in constants]
+
+    for name, value in params.items():
+        for idx, (const_name, const_value) in enumerate(updated_constants):
+            if const_name == name:
+                updated_constants[idx] = (const_name, value)
+
+    return updated_constants
+
+
+
+def simulate(filename, st=0, tf=50, dt=0.1, plot=False, x_label="time (days)", y_label="conc/ml", params={}):
     sim_steps = np.arange(st, tf + dt, dt)
+
+    constants_values = [value for _, value in update_constants_with_params(constants_with_names(), params)]
 
     simulation_output = scipy.integrate.solve_ivp(
         fun=system,
         t_span=(st, tf + dt * 2),
         y0=initial_values(),
-        args=constants(),
+        args=tuple(constants_values),
         t_eval=sim_steps,
     )
 
     if plot:
         plot_simulation(sim_steps, simulation_output, filename, x_label, y_label)
-
     else:
         with file_or_stdout(filename) as f:
             simulation_output_to_csv(sim_steps, simulation_output, f)
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
     parser.add_argument("--st", type=float, default=0)
     parser.add_argument("--tf", type=float, default=50)
     parser.add_argument("--dt", type=float, default=0.01)
     parser.add_argument("-o", "--output", default=None)
     parser.add_argument("--csv", action=argparse.BooleanOptionalAction)
-    parser.add_argument("--xlabel", type=str, default="time (days)")  
+    parser.add_argument("--xlabel", type=str, default="time (days)")
     parser.add_argument("--ylabel", type=str, default="conc/ml")
+    parser.add_argument("--params", type=str, default="")
 
     args = parser.parse_args()
 
-    if args.output is None and not args.csv:
-        parser.error("when plotting (a.k.a --no-csv), an output file name is required via --output")
-
-    if args.output:
-        dirs = os.path.dirname(args.output)
-
-        if dirs:
-            os.makedirs(dirs, exist_ok=True)
+    if args.params:
+        params = {k: float(v) for k, v in (param.split('=') for param in args.params.split())}
+    else:
+        params = {}
 
     simulate(
         args.output,
@@ -110,6 +120,6 @@ if __name__ == "__main__":
         tf=args.tf,
         dt=args.dt,
         x_label=args.xlabel,
-        y_label=args.ylabel
+        y_label=args.ylabel,
+        params=params
     )
-

@@ -43,6 +43,15 @@ def constants() -> list:
     ]
 
 
+def constants_with_names() -> list:
+    constants_list = [
+        {% for constant in constants -%}
+            ("{{- constant.name }}", {{ constant.value }}),
+        {% endfor -%}
+    ]
+    return constants_list
+
+
 def variable_names() -> list[str]:
     return [
         {% for arg in populations -%}

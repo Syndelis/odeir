@@ -1,7 +1,7 @@
 import argparse, contextlib, sys, os
 import scipy
 import numpy as np
-np.seterr(all="raise")
+np.seterr(divide="raise")
 
 {% if extensions -%}
 # User extensions
